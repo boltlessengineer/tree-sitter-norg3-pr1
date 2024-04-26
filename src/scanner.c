@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <wctype.h>
@@ -150,11 +151,6 @@ enum token_type {
     WHITESPACE,
 
     PARAGRAPH_BREAK,
-    NEWLINE,
-    FAILED_CLOSE,
-    FLAG_INSIDE_VERBATIM,
-
-    PUNCTUATION,
 
     DESC_OPEN,
     DESC_CLOSE,
@@ -169,36 +165,58 @@ enum token_type {
 
     BOLD_OPEN,
     BOLD_CLOSE,
+    FREE_BOLD_OPEN,
+    FREE_BOLD_CLOSE,
 
     ITALIC_OPEN,
     ITALIC_CLOSE,
+    FREE_ITALIC_OPEN,
+    FREE_ITALIC_CLOSE,
 
     UNDERLINE_OPEN,
     UNDERLINE_CLOSE,
+    FREE_UNDERLINE_OPEN,
+    FREE_UNDERLINE_CLOSE,
 
     STRIKETHROUGH_OPEN,
     STRIKETHROUGH_CLOSE,
+    FREE_STRIKETHROUGH_OPEN,
+    FREE_STRIKETHROUGH_CLOSE,
 
     SPOILER_OPEN,
     SPOILER_CLOSE,
+    FREE_SPOILER_OPEN,
+    FREE_SPOILER_CLOSE,
 
     SUPERSCRIPT_OPEN,
     SUPERSCRIPT_CLOSE,
+    FREE_SUPERSCRIPT_OPEN,
+    FREE_SUPERSCRIPT_CLOSE,
 
     SUBSCRIPT_OPEN,
     SUBSCRIPT_CLOSE,
+    FREE_SUBSCRIPT_OPEN,
+    FREE_SUBSCRIPT_CLOSE,
 
     INLINE_COMMENT_OPEN,
     INLINE_COMMENT_CLOSE,
+    FREE_INLINE_COMMENT_OPEN,
+    FREE_INLINE_COMMENT_CLOSE,
 
     VERBATIM_OPEN,
     VERBATIM_CLOSE,
+    FREE_VERBATIM_OPEN,
+    FREE_VERBATIM_CLOSE,
 
     INLINE_MATH_OPEN,
     INLINE_MATH_CLOSE,
+    FREE_INLINE_MATH_OPEN,
+    FREE_INLINE_MATH_CLOSE,
 
     INLINE_MACRO_OPEN,
     INLINE_MACRO_CLOSE,
+    FREE_INLINE_MACRO_OPEN,
+    FREE_INLINE_MACRO_CLOSE,
 
     HEADING,
     UNORDERED_LIST,
@@ -299,13 +317,17 @@ bool is_whitespace(int32_t character) {
     return character && iswspace(character) && !is_newline(character);
 }
 
-static bool is_free_form(vec_u32* att_stack, const token_type kind) {
-    for (size_t i = 0; i < att_stack->len; i++) {
-        if (att_stack->vec[i] == kind) {
-            return ++i < att_stack->len && att_stack->vec[i] == FREE_FORM_OPEN;
-        }
+bool match_str(TSLexer* lexer, const char* str) {
+    size_t i = 0;
+    while (str[i] != '\0') {
+        if (lexer->eof(lexer))
+            return false;
+        if (str[i] != lexer->lookahead)
+            return false;
+        i++;
+        lexer->advance(lexer, false);
     }
-    return false;
+    return true;
 }
 
 typedef struct Scanner Scanner;
@@ -317,109 +339,12 @@ struct Scanner {
     vec_u32 indent_list;
 };
 
-bool scan_newline(Scanner *self, const bool *valid_symbols) {
-    while (is_whitespace(self->lexer->lookahead))
-        lex_skip();
-
-    if (is_newline(lex_next)) {
-        lex_advance_newline();
-        if (!valid_symbols[FAILED_CLOSE])
-            self->lexer->mark_end(self->lexer);
-
-        if (valid_symbols[NEWLINE]) {
-            lex_set_result(NEWLINE);
-            return true;
-        }
-
-        while (is_whitespace(lex_next))
-            lex_skip();
-        if (self->lexer->eof(self->lexer) || is_newline(lex_next)) {
-            if (valid_symbols[FAILED_CLOSE] && !vec_u32_empty(&self->att_stack)) {
-                const token_type fail_type = vec_u32_pop(&self->att_stack);
-                lex_set_result(FAILED_CLOSE);
-                return true;
-            }
-            if (!valid_symbols[PARAGRAPH_BREAK]) return false;
-            LOG("paragraph break by eof or double newline\n");
-            lex_set_result(PARAGRAPH_BREAK);
-            vec_u32_clear(&self->att_stack);
-            return true;
-        }
-        const int32_t character = lex_next;
-        lex_skip();
-        if (char_to_detached_mod(character) != 0 || character == '_' || character == '=') {
-            size_t count = 1;
-            while (lex_next == character) {
-                count++;
-                lex_skip();
-            }
-            if (iswspace(lex_next)) {
-                if (valid_symbols[FAILED_CLOSE] && !vec_u32_empty(&self->att_stack)) {
-                    const token_type fail_type = vec_u32_pop(&self->att_stack);
-                    lex_set_result(FAILED_CLOSE);
-                    return true;
-                }
-                if (!valid_symbols[PARAGRAPH_BREAK]) return false;
-                LOG("paragraph break by detached modifier\n");
-                lex_set_result(PARAGRAPH_BREAK);
-                vec_u32_clear(&self->att_stack);
-                return true;
-            }
-        }
-        if ((character == '^' || character == '$' || character == ':')
-            && (lex_next == character || is_whitespace(lex_next))
-        ) {
-            if (lex_next == character) {
-                lex_advance();
-                if (lex_next && !iswspace(lex_next)) return false;
-            }
-            if (valid_symbols[FAILED_CLOSE] && !vec_u32_empty(&self->att_stack)) {
-                const token_type fail_type = vec_u32_pop(&self->att_stack);
-                lex_set_result(FAILED_CLOSE);
-                return true;
-            }
-            if (!valid_symbols[PARAGRAPH_BREAK]) return false;
-            LOG("paragraph break by range-able detached modifier prefix\n");
-            lex_set_result(PARAGRAPH_BREAK);
-            vec_u32_clear(&self->att_stack);
-            return true;
-        }
-        if ((character == '#'
-            || character == '+'
-            || character == '.'
-            || character == '|'
-            || character == '@'
-            || character == '=')
-            && is_word(lex_next)
-        ) {
-            if (valid_symbols[FAILED_CLOSE] && !vec_u32_empty(&self->att_stack)) {
-                const token_type fail_type = vec_u32_pop(&self->att_stack);
-                lex_set_result(FAILED_CLOSE);
-                return true;
-            }
-            if (!valid_symbols[PARAGRAPH_BREAK]) return false;
-            LOG("paragraph break by tag prefix\n");
-            lex_set_result(PARAGRAPH_BREAK);
-            vec_u32_clear(&self->att_stack);
-            return true;
-        }
-    }
-    return false;
-}
-
 static bool scan_linkable_close(Scanner *self, const bool *valid_symbols, const token_type kind) {
     if (valid_symbols[kind]) {
         lex_advance();
         lex_mark_end();
         lex_set_result(kind);
         vec_u32_pop(&self->att_stack);
-        return true;
-    }
-    if (vec_u32_has(&self->att_stack, (token_type)(kind - 1))
-        && valid_symbols[FAILED_CLOSE]
-    ) {
-        const token_type fail_type = vec_u32_pop(&self->att_stack);
-        lex_set_result(FAILED_CLOSE);
         return true;
     }
     return false;
@@ -441,7 +366,7 @@ Action scan_linkables(Scanner *self, const bool *valid_symbols) {
         LOG("target\n");
         return ACCEPT;
     }
-    if (!valid_symbols[FLAG_INSIDE_VERBATIM] && !vec_u32_empty(&self->att_stack)) {
+    if (!vec_u32_empty(&self->att_stack)) {
         if (lex_next == ']')
             return scan_linkable_close(self, valid_symbols, DESC_CLOSE) ? ACCEPT : FAIL;
         if (lex_next == '}')
@@ -506,92 +431,98 @@ Action scan_detached_modifier(Scanner *self, const bool *valid_symbols, const in
     return ACCEPT;
 }
 
-bool scan_free_form_close(Scanner *self, const bool *valid_symbols, const int32_t character) {
-    const token_type kind_token = char_to_attached_mod(lex_next);
-    const token_type close_token = (token_type)(kind_token + 1);
-    if (kind_token != 0
-        && (valid_symbols[FREE_FORM_CLOSE]
-            || valid_symbols[FAILED_CLOSE] && vec_u32_has(&self->att_stack, FREE_FORM_OPEN))
-        && vec_u32_has(&self->att_stack, kind_token)
-    ) {
-        if (!valid_symbols[FAILED_CLOSE])
-            lex_mark_end();
-        lex_advance();
-        if (!is_word(lex_next)) {
-            if (valid_symbols[FAILED_CLOSE]) {
-                const token_type fail_type = vec_u32_pop(&self->att_stack);
-                lex_set_result(FAILED_CLOSE);
-                return true;
-            }
-            if (valid_symbols[FREE_FORM_CLOSE]
-                && vec_u32_back_or(&self->att_stack, 0) == FREE_FORM_OPEN
-                && self->att_stack.vec[self->att_stack.len - 2] == kind_token
-            ) {
-                lex_set_result(FREE_FORM_CLOSE);
-                vec_u32_pop(&self->att_stack);
-                return true;
+Action scan_prefix(Scanner *self, const bool *valid_symbols, const int32_t character) {
+    // prefix is token with repeated punctuation or single punctuation followed by whitespace
+    LOG("scan_prefix\n");
+    if (character != '|' && character != lex_next && !iswspace(lex_next))
+        return SCAN_SKIP;
+
+    if (character == '*' && valid_symbols[HEADING]) {
+        size_t count = 1;
+        while (lex_next == character) {
+            lex_advance();
+            count++;
+        }
+        if (!is_whitespace(lex_next))
+            return FAIL;
+        if (!valid_symbols[ERROR_MODE] && valid_symbols[DEDENT] && count <= vec_u32_back_or(&self->indent_heading, 0)) {
+            vec_u32_pop(&self->indent_heading);
+            lex_set_result(DEDENT);
+            return ACCEPT;
+        }
+        vec_u32_push(&self->indent_heading, count);
+        lex_mark_end();
+        lex_set_result(HEADING);
+        return ACCEPT;
+    }
+
+    if (character == '|' && valid_symbols[STD_RANGED_PREFIX]) {
+        LOG("standard ranged prefix\n");
+        lex_mark_end();
+        if (match_str(self->lexer, "end")) {
+            if (iswspace(lex_next)) {
+                lex_mark_end();
+                // pop until level-0
+                vec_u32_pop_until(&self->indent_heading, 0);
+                vec_u32_pop_until(&self->indent_list, 0);
+                lex_set_result(STD_RANGED_END);
+                return ACCEPT;
             }
         }
-        return false;
+        // append level-0
+        vec_u32_push(&self->indent_heading, 0);
+        vec_u32_push(&self->indent_list, 0);
+        lex_set_result(STD_RANGED_PREFIX);
+        return ACCEPT;
     }
-    if (valid_symbols[FREE_FORM_OPEN]) {
-        lex_mark_end();
-        lex_set_result(FREE_FORM_OPEN);
-        vec_u32_push(&self->att_stack, FREE_FORM_OPEN);
-        return true;
-    }
-    return false;
+    return SCAN_SKIP;
 }
 
-bool scan_attached_modifier(Scanner *self, const bool *valid_symbols, int32_t character) {
-    bool link_mod_left = false;
-    if (character == ':' && valid_symbols[NOT_OPEN]) {
-        character = lex_next;
-        lex_advance();
-        link_mod_left = true;
-    }
-    const token_type kind_token = char_to_attached_mod(character);
-    const token_type close_token = (token_type)(kind_token + 1);
-    if (kind_token == 0
-        // 5th case in link-mod-00
-        || (link_mod_left && vec_u32_has(&self->att_stack, kind_token))
-        // repeated modifier
-        || (lex_next == character)) {
-        LOG("fail scan_attached_modifier\n");
-        return false;
-    }
+Action scan_att_open(Scanner *self, const bool *valid_symbols, const int32_t character, const bool link_mod) {
+    if (valid_symbols[NOT_OPEN])
+        return SCAN_SKIP;
 
-    // _CLOSE
-    const bool valid_failed_close = valid_symbols[FAILED_CLOSE] && vec_u32_back_or(&self->att_stack, 0) != kind_token;
-    if (valid_symbols[NOT_CLOSE]) {
-        if (!valid_symbols[kind_token]) {
+    const token_type kind_token = char_to_attached_mod(character);
+    if (kind_token && valid_symbols[kind_token] && !iswspace(lex_next)) {
+        if (character == lex_next)
+            return FAIL;
+        lex_mark_end();
+        if (lex_next == '|') {
+            lex_advance();
             lex_mark_end();
-            lex_set_result(NOT_CLOSE);
-            return true;
-        }
-    } else if ((valid_symbols[close_token] || valid_failed_close)
-        && !is_word(lex_next)
-        && vec_u32_has(&self->att_stack, kind_token)
-    ) {
-        if (valid_failed_close
-            && (kind_token < VERBATIM_OPEN)
-            // check if its' not free-form markup to check free-16
-            && !is_free_form(&self->att_stack, kind_token)
-        ) {
-            const token_type fail_type = vec_u32_pop(&self->att_stack);
-            lex_set_result(FAILED_CLOSE);
-            return true;
-        }
-        while (vec_u32_back_or(&self->att_stack, 0) != kind_token) {
-            // don't skip FREE_FORM here
-            if (vec_u32_back_or(&self->att_stack, 0) == FREE_FORM_OPEN) {
-                LOG("fail scan_attached_modifier\n");
-                return false;
+            const token_type next_token = char_to_attached_mod(lex_next);
+            if (next_token && valid_symbols[next_token + 3]) { // FREE_*_CLOSE
+                lex_advance();
+                if (!is_word(lex_next)) {
+                    return FAIL;
+                }
             }
-            vec_u32_pop(&self->att_stack);
+            lex_set_result(kind_token + 2); // FREE_*_OPEN
+            return ACCEPT;
         }
-        vec_u32_pop(&self->att_stack);
-        lex_set_result(close_token);
+        if (valid_symbols[kind_token + 1]) {
+            return FAIL;
+        }
+        lex_set_result(kind_token);
+        return ACCEPT;
+    }
+    return SCAN_SKIP;
+}
+bool scan_att_close(Scanner *self, const bool *valid_symbols, const int32_t character, const bool free_form) {
+    if (!free_form && valid_symbols[NOT_CLOSE])
+        return false;
+    const token_type kind_token = char_to_attached_mod(character);
+    const token_type close_token = kind_token + 1 + free_form * 2;
+    // if (kind_token && valid_symbols[close_token - 1]) {
+    //     return false;
+    // }
+    if (kind_token && !is_word(lex_next)) {
+        LOG("%c: %d\n", lex_next, lex_column);
+        LOG("%d\n", valid_symbols[close_token]);
+    }
+    if (kind_token && valid_symbols[close_token] && !is_word(lex_next)) {
+        if (character == lex_next)
+            return false;
         lex_mark_end();
         if (lex_next == ':') {
             lex_advance();
@@ -599,26 +530,33 @@ bool scan_attached_modifier(Scanner *self, const bool *valid_symbols, int32_t ch
                 lex_mark_end();
             }
         }
+        lex_set_result(close_token);
         return true;
     }
-    // _OPEN
-    if (!link_mod_left && valid_symbols[NOT_OPEN]) {
-        lex_mark_end();
-        lex_set_result(NOT_OPEN);
-        return true;
-    }
-    if (valid_symbols[kind_token]
-        && !vec_u32_has(&self->att_stack, kind_token)
-        && lex_next && !iswspace(lex_next)
-    ) {
-        lex_mark_end();
+    return false;
+}
+
+bool scan_att_mod(Scanner *self, const bool *valid_symbols, const int32_t character) {
+    LOG("scan_att_mod\n");
+    if (character == ':') {
         const int32_t next_char = lex_next;
-        const token_type next_token = char_to_attached_mod(next_char);
-        vec_u32_push(&self->att_stack, kind_token);
-        lex_set_result(kind_token);
-        return true;
+        lex_advance();
+        TRY_SCAN(scan_att_open(self, valid_symbols, next_char, true));
+        LOG("fail\n");
+        return false;
     }
-    LOG("fail scan_attached_modifier\n");
+    if (scan_att_close(self, valid_symbols, character, false))
+        return true;
+    TRY_SCAN(scan_att_open(self, valid_symbols, character, false));
+    if (character == '|') {
+        const int32_t next_char = lex_next;
+        lex_advance();
+        if (scan_att_close(self, valid_symbols, next_char, true))
+            return true;
+        LOG("fail\n");
+        return false;
+    }
+    LOG("fail\n");
     return false;
 }
 
@@ -629,14 +567,8 @@ bool scan(Scanner *self, const bool *valid_symbols) {
     // We return false here to allow the lexer to fall back
     // to the grammar, which allows the existence of `\0`.
     if (lex_eof) {
-        if (valid_symbols[FAILED_CLOSE] && !vec_u32_empty(&self->att_stack)) {
-            const token_type fail_type = vec_u32_pop(&self->att_stack);
-            lex_set_result(FAILED_CLOSE);
-            return true;
-        }
         if (valid_symbols[PARAGRAPH_BREAK]) {
             lex_set_result(PARAGRAPH_BREAK);
-            vec_u32_clear(&self->att_stack);
             return true;
         }
         return false;
@@ -648,14 +580,7 @@ bool scan(Scanner *self, const bool *valid_symbols) {
     // odd errors with preceding whitespace like ` @end`, where `@end` isn't parsed because
     // a `$._whitespace` is encountered, causing the parser to continue parsing as if everything
     // were a `$.paragraph_segment`.
-    if (lex_column == 0 && is_whitespace(lex_next)) {
-        while (is_whitespace(lex_next))
-            lex_advance();
-
-        lex_set_result(WHITESPACE);
-        return true;
-    }
-
+    const bool start_column = lex_column;
     lex_mark_end();
     if (valid_symbols[AUTO_SEMI] && !error_mode) {
         if (lex_next == ')' || is_newline(lex_next)) {
@@ -663,46 +588,76 @@ bool scan(Scanner *self, const bool *valid_symbols) {
             return true;
         }
     }
-    if (iswspace(lex_next))
-        return scan_newline(self, valid_symbols);
-
-
+    // if (iswspace(lex_next))
+    //     return scan_newline(self, valid_symbols);
     TRY_SCAN(scan_linkables(self, valid_symbols));
 
     const int32_t character = lex_next;
     lex_advance();
 
-    if (character == '|' && !iswspace(lex_next) && (valid_symbols[STD_RANGED_PREFIX] || valid_symbols[STD_RANGED_END])) {
+    if (start_column == 0 && is_whitespace(character)) {
+        while (is_whitespace(lex_next))
+            lex_skip();
+
+        TRY_SCAN(scan_prefix(self, valid_symbols, character));
+
         lex_mark_end();
-        // TODO(boltless): find better format for matching string
-        if (lex_next == 'e') {
+        lex_set_result(WHITESPACE);
+        return true;
+    }
+    if (start_column == 0)
+        TRY_SCAN(scan_prefix(self, valid_symbols, character));
+
+    if (is_newline(character)) {
+        if (character == '\n' && lex_next == '\r')
             lex_advance();
-            if (lex_next == 'n') {
-                lex_advance();
-                if (lex_next == 'd') {
-                    lex_advance();
-                    if (iswspace(lex_next)) {
-                        lex_mark_end();
-                        vec_u32_pop_until(&self->indent_heading, 0);
-                        vec_u32_pop_until(&self->indent_list, 0);
-                        lex_set_result(STD_RANGED_END);
-                        return true;
-                    }
-                }
-            }
+        lex_mark_end();
+        while (is_whitespace(lex_next))
+            lex_advance();
+        // NOTE: don't do more than this. parse soft_break from grammar.js
+        // as cases when paragraph parsing breaks is when free-form/linkables
+        // are not closed and in that situation, user expect parser tries to
+        // extend until it get the closing modifier
+        if ((is_newline(lex_next) || lex_eof) && valid_symbols[PARAGRAPH_BREAK]) {
+            lex_set_result(PARAGRAPH_BREAK);
+        } else {
+            return false;
         }
-        vec_u32_push(&self->indent_heading, 0);
-        vec_u32_push(&self->indent_list, 0);
-        lex_set_result(STD_RANGED_PREFIX);
         return true;
     }
 
-    TRY_SCAN(scan_detached_modifier(self, valid_symbols, character));
+    // if (character == '|' && !iswspace(lex_next) && (valid_symbols[STD_RANGED_PREFIX] || valid_symbols[STD_RANGED_END])) {
+    //     lex_mark_end();
+    //     // TODO(boltless): find better format for matching string
+    //     if (lex_next == 'e') {
+    //         lex_advance();
+    //         if (lex_next == 'n') {
+    //             lex_advance();
+    //             if (lex_next == 'd') {
+    //                 lex_advance();
+    //                 if (iswspace(lex_next)) {
+    //                     lex_mark_end();
+    //                     vec_u32_pop_until(&self->indent_heading, 0);
+    //                     vec_u32_pop_until(&self->indent_list, 0);
+    //                     lex_set_result(STD_RANGED_END);
+    //                     return true;
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     vec_u32_push(&self->indent_heading, 0);
+    //     vec_u32_push(&self->indent_list, 0);
+    //     lex_set_result(STD_RANGED_PREFIX);
+    //     return true;
+    // }
 
-    if (character == '|')
-        return scan_free_form_close(self, valid_symbols, character);
+    // TRY_SCAN(scan_detached_modifier(self, valid_symbols, character));
 
-    return scan_attached_modifier(self, valid_symbols, character);
+    // if (character == '|')
+    //     return scan_free_form_close(self, valid_symbols, character);
+    //
+    // return scan_attached_modifier(self, valid_symbols, character);
+    return scan_att_mod(self, valid_symbols, character);
 }
 
 void *tree_sitter_norg_external_scanner_create() {
