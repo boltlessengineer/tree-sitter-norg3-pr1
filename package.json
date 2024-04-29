@@ -3,26 +3,47 @@
     "version": "0.0.1",
     "description": "tree-sitter parser for Norg format",
     "main": "bindings/node",
+    "types": "bindings/node",
     "scripts": {
         "gen": "tree-sitter generate",
         "build": "tree-sitter generate && tree-sitter test",
         "test": "tree-sitter test",
         "parse": "tree-sitter parse",
         "build:wasm": "tree-sitter build-wasm",
-        "size": "du -h ~/.cache/tree-sitter/lib/norg*.so"
+        "size": "du -h ~/.cache/tree-sitter/lib/norg*.so",
+        "install": "node-gyp-build",
+        "prebuildify": "prebuildify --napi --strip"
     },
     "keywords": [
         "tree-sitter",
         "neorg",
         "norg"
     ],
+    "files": [
+        "grammar.js",
+        "binding.gyp",
+        "prebuilds/**",
+        "bindings/node/*",
+        "queries/*",
+        "src/**"
+    ],
     "license": "MIT",
     "dependencies": {
-        "nan": "^2.18.0"
+        "node-addon-api": "^7.1.0",
+        "node-gyp-build": "^4.8.0"
+    },
+    "peerDependencies": {
+        "tree-sitter": "^0.21.0"
+    },
+    "peerDependenciesMeta": {
+        "tree_sitter": {
+            "optional": true
+        }
     },
     "devDependencies": {
         "@types/node": "^20.9.2",
-        "tree-sitter-cli": "^0.20.8"
+        "tree-sitter-cli": "^0.20.8",
+        "prebuildify": "^6.0.0"
     },
     "tree-sitter": [
         {

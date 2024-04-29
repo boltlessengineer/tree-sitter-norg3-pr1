@@ -1,4 +1,3 @@
-#include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 #include <wctype.h>
@@ -150,7 +149,8 @@ typedef enum token_type token_type;
 enum token_type {
     WHITESPACE,
 
-    PARAGRAPH_BREAK,
+    BLANK_LINE,
+    FLAG_INSIDE_VERBATIM,
 
     DESC_OPEN,
     DESC_CLOSE,
@@ -479,12 +479,14 @@ Action scan_prefix(Scanner *self, const bool *valid_symbols, const int32_t chara
 }
 
 Action scan_att_open(Scanner *self, const bool *valid_symbols, const int32_t character, const bool link_mod) {
-    if (valid_symbols[NOT_OPEN])
+    if (valid_symbols[FLAG_INSIDE_VERBATIM])
+        return SCAN_SKIP;
+    if (link_mod ^ valid_symbols[NOT_OPEN])
         return SCAN_SKIP;
 
     const token_type kind_token = char_to_attached_mod(character);
-    if (kind_token && valid_symbols[kind_token] && !iswspace(lex_next)) {
-        if (character == lex_next)
+    if (kind_token && valid_symbols[kind_token] && !iswspace(lex_next) && !lex_eof) {
+        if (character == lex_next || valid_symbols[kind_token + 1] || valid_symbols[kind_token + 3])
             return FAIL;
         lex_mark_end();
         if (lex_next == '|') {
@@ -499,9 +501,6 @@ Action scan_att_open(Scanner *self, const bool *valid_symbols, const int32_t cha
             }
             lex_set_result(kind_token + 2); // FREE_*_OPEN
             return ACCEPT;
-        }
-        if (valid_symbols[kind_token + 1]) {
-            return FAIL;
         }
         lex_set_result(kind_token);
         return ACCEPT;
@@ -521,7 +520,7 @@ bool scan_att_close(Scanner *self, const bool *valid_symbols, const int32_t char
         LOG("%d\n", valid_symbols[close_token]);
     }
     if (kind_token && valid_symbols[close_token] && !is_word(lex_next)) {
-        if (character == lex_next)
+        if (character == lex_next || (!free_form && valid_symbols[close_token + 2]))
             return false;
         lex_mark_end();
         if (lex_next == ':') {
@@ -567,10 +566,6 @@ bool scan(Scanner *self, const bool *valid_symbols) {
     // We return false here to allow the lexer to fall back
     // to the grammar, which allows the existence of `\0`.
     if (lex_eof) {
-        if (valid_symbols[PARAGRAPH_BREAK]) {
-            lex_set_result(PARAGRAPH_BREAK);
-            return true;
-        }
         return false;
     }
 
@@ -580,7 +575,7 @@ bool scan(Scanner *self, const bool *valid_symbols) {
     // odd errors with preceding whitespace like ` @end`, where `@end` isn't parsed because
     // a `$._whitespace` is encountered, causing the parser to continue parsing as if everything
     // were a `$.paragraph_segment`.
-    const bool start_column = lex_column;
+    const uint32_t start_column = lex_column;
     lex_mark_end();
     if (valid_symbols[AUTO_SEMI] && !error_mode) {
         if (lex_next == ')' || is_newline(lex_next)) {
@@ -618,8 +613,8 @@ bool scan(Scanner *self, const bool *valid_symbols) {
         // as cases when paragraph parsing breaks is when free-form/linkables
         // are not closed and in that situation, user expect parser tries to
         // extend until it get the closing modifier
-        if ((is_newline(lex_next) || lex_eof) && valid_symbols[PARAGRAPH_BREAK]) {
-            lex_set_result(PARAGRAPH_BREAK);
+        if (start_column == 0 && valid_symbols[BLANK_LINE]) {
+            lex_set_result(BLANK_LINE);
         } else {
             return false;
         }

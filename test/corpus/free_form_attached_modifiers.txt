@@ -350,4 +350,56 @@ free-18: proper close free-form (verbatim)
       (verbatim_close))
     (paragraph_break)))
 
+================================================================================
+free-19: verbatim > non-verbatim free-form
+================================================================================
+`word *|word`|*
+
+*|`word word|*`|*
+--------------------------------------------------------------------------------
+(document
+  (paragraph
+    (verbatim
+      (verbatim_open)
+      (word)
+      (whitespace)
+      (punctuation)
+      (punctuation)
+      (word)
+      (verbatim_close))
+    (punctuation)
+    (punctuation)
+    (soft_break))
+  (blank_line)
+  (paragraph
+    (bold
+      (free_bold_open)
+      (verbatim
+        (verbatim_open)
+        (word)
+        (whitespace)
+        (word)
+        (punctuation)
+        (punctuation)
+        (verbatim_close))
+      (free_bold_close))))
+
+================================================================================
+free-20: never ever open bold inside unclosed italic inside free-form bold
+================================================================================
+*|/word *word|*
+
+*|/word *word*|*
+--------------------------------------------------------------------------------
+(document)
+
+================================================================================
+free-21: don't open free-form bold inside unclosed italic inside bold
+================================================================================
+*word /word *|word|*
+
+*/word *|word|*
+--------------------------------------------------------------------------------
+(document)
+
 ; vim:ts=2:sw=2:

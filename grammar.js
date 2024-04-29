@@ -3,11 +3,11 @@
 const newline = choice("\n", "\r", "\r\n");
 const newline_or_eof = choice("\n", "\r", "\r\n", "\0");
 const whitespace = /\p{Zs}+/u;
-const whitespace_or_newline = token(prec.right(choice(
+const whitespace_or_newline = choice(
     whitespace,
     newline,
     seq(whitespace, newline),
-)))
+);
 const word = /[\p{L}\p{N}]+/;
 
 const ATTACHED_MODIFIERS = [
@@ -15,15 +15,17 @@ const ATTACHED_MODIFIERS = [
     "italic",
     "underline",
     "strikethrough",
-    "spoiler",
-    "superscript",
-    "subscript",
+    // "spoiler",
+    // "superscript",
+    // "subscript",
     "inline_comment",
 ];
 const VERBATIM_ATTACHED_MODIFIERS = [
     "verbatim",
     "math",
     "inline_macro",
+    "superscript",
+    "subscript",
 ];
 
 /// General TODOS:
@@ -47,7 +49,8 @@ module.exports = grammar({
     externals: ($) => [
         $._preceding_whitespace,
 
-        $.paragraph_break,
+        $.blank_line,
+        $.__inside_verbatim,
 
         $.desc_open,
         $.desc_close,
@@ -132,152 +135,237 @@ module.exports = grammar({
         $._error_sentinel,
     ],
 
-    conflicts: ($) => [
-        ...ATTACHED_MODIFIERS.map((kind) => [
-            // [$[kind], $[kind + "_conflict"]],
-            // FIXME:you can't make this conflict case, as this leads 2^8 dynamic conflict cases
-            [$["_"+kind+"_inner"], $[kind + "_conflict"]],
-            // [$[kind], $.open_conflict],
-            // [$[kind]],
-        ]).flat(),
-        // [$._link_description, $.verbatim],
-        // [$._link_description, $.math],
-        // [$._link_description, $.inline_macro],
-        // [$._link_target, $.verbatim],
-        // [$._link_target, $.math],
-        // [$._link_target, $.inline_macro],
+    conflicts: () => [],
 
-        // [$.tag, $.unordered_list_item],
-        // [$.tag, $.ordered_list_item],
-        // [$.tag, $.quote_list_item],
+    precedences: () => [
+        // TODO:
+        // $.whitespace < $.link_scope_prefix < $.verbatim_whitespace
+        //                                    < $.verbatim_punctuation
     ],
 
-    precedences: () => [],
-
     inline: ($) => [
+        $.__general,
         $.document_content,
     ],
 
     supertypes: ($) => [
         $.non_structural,
+        $.tag,
+        $.linkable,
     ],
 
     rules: {
         document: ($) => repeat($.document_content),
         document_content: ($) =>
             choice(
+                $.heading,
                 $.non_structural,
-                newline,
+                $.strong_delimiting_modifier,
             ),
         paragraph: ($) => seq(
-            $._inner,
-            optional($.paragraph_break)
+            $._paragraph_inner,
         ),
-        _inner: ($) =>
-            prec.right(
-                seq(
+        __general: ($) =>
+            choice(
+                seq($.soft_break, optional($.not_close)),
+                seq($.whitespace, optional($.not_close)),
+                seq($.word, optional($.not_open)),
+                $.punctuation,
+                $.escape_sequence,
+                $.linkable,
+            ),
+        // TODO: force to end with soft_break or \0
+        _paragraph_inner: ($) =>
+            choice(
+                prec.right(seq(
                     choice(
+                        seq($.soft_break, optional($.not_close)),
                         seq($.whitespace, optional($.not_close)),
                         seq($.word, optional($.not_open)),
                         $.punctuation,
                         $.escape_sequence,
-                        seq($.soft_break, optional($.not_close)),
+                        $.linkable,
 
                         ...ATTACHED_MODIFIERS.map((k) => [
                             $[k],
-                            $[k+"_conflict"],
                         ]).flat(),
                         ...VERBATIM_ATTACHED_MODIFIERS.map((k) => [
                             $[k],
                         ]).flat(),
                     ),
-                    optional($._inner)
-                )
+                    optional($._paragraph_inner)
+                )),
+                ...VERBATIM_ATTACHED_MODIFIERS.map((k) => [
+                    alias($["_"+k+"_unclosed"], $.open_conflict),
+                ]).flat(),
+                $.open_conflict,
             ),
 
-        punctuation: ($) => choice(
-            token(choice(
-                repeat1('*'),
-                repeat1('/'),
-                repeat1('_'),
-                repeat1('-'),
-                repeat1('!'),
-                repeat1('`'),
-                repeat1('&'),
-                repeat1('$'),
-                // '#',
-                // '+',
-                // '.',
-                // '|',
-                // '@',
-                // '=',
-                /[^\n\r\p{Z}\p{L}\p{N}]/u,
-            )),
-            // ...ATTACHED_MODIFIERS.map((kind) =>
-            //     prec.right(
-            //         0,
-            //         seq(
-            //             prec(1, $[kind+"_open"]),
-            //             prec.right(
-            //                 2,
-            //                 repeat1(
-            //                     prec(2, $[kind+"_open"])
-            //                 )
-            //             )
-            //         )
-            //     )
-            // ),
-            // prec(3, seq($.bold_open, $.bold_open)),
-        ),
+        punctuation: ($) => token(choice(
+            // TODO: replace these repeated tokens to
+            // external token "_failed_punctuation" immediately followed by
+            // optional "not_open" and "not_close"
+            // "_failed_punctuation" will be returned for "*" with lookahead "*"
+            // last "*" will be parsed from regex token below
+            repeat1('*'),
+            repeat1('/'),
+            repeat1('_'),
+            repeat1('-'),
+            repeat1('!'),
+            repeat1('`'),
+            repeat1('&'),
+            repeat1('$'),
+            // '#',
+            // '+',
+            // '.',
+            // '|',
+            // '@',
+            // '=',
+            /[^\n\r\p{Z}\p{L}\p{N}]/u,
+        )),
 
         word: (_) => token(word),
         whitespace: (_) => token(prec(1, whitespace)),
-        soft_break: (_) => token(prec(1, newline)),
+        soft_break: (_) => newline,
 
         escape_sequence: (_) => token(seq("\\", choice(/./, newline))),
 
+        linkable: ($) => choice($.anchor, $.link),
+        anchor: ($) =>
+            prec.right(seq(
+                $.link_description,
+                optional($.link_target),
+                optional($.extensions),
+            )),
+        link: ($) =>
+            prec.right(seq(
+                $.link_target,
+                optional($.link_description),
+                optional($.extensions),
+            )),
+        link_description: ($) =>
+            seq(
+                "[",
+                optional(field("description", $._paragraph_inner)),
+                "]",
+            ),
+        link_target: ($) =>
+            seq(
+                "{",
+                choice(
+                    seq(
+                        optional($.link_scope_prefix),
+                        $._link_scope_list,
+                    )
+                ),
+                "}",
+            ),
+        link_scope_prefix: (_) =>
+            token(prec(2, seq(
+                optional(whitespace_or_newline),
+                ":",
+                optional(whitespace_or_newline),
+            ))),
+        // HACK: implement proper filepath parsing
+        path: (_) => word,
+        _link_scope_list: ($) =>
+            prec.right(seq(
+                choice(
+                    $.link_scope_heading,
+                    $.link_scope_file,
+                ),
+                repeat(
+                    seq(
+                        $.link_scope_prefix,
+                        optional($._link_scope_list),
+                    ),
+                ),
+            )),
+        link_scope_file: ($) =>
+            seq(
+                $.path,
+            ),
+        link_scope_heading: ($) =>
+            seq(
+                token(seq(repeat1("*"), whitespace_or_newline)),
+                $._paragraph_inner,
+            ),
+        // NOTE: can't use same method inside complete markups (e.g. `*/word*`)
+        // BUT it is ok because unclosed markup inside closed markup is
+        // actually safe to use
+        open_conflict: ($) =>
+            prec.right(seq(
+                choice(
+                    ...ATTACHED_MODIFIERS.map((k) => [
+                        $["_"+k+"_unclosed"],
+                    ]).flat(),
+                ),
+                optional(
+                    $._paragraph_inner,
+                )
+            )),
         ...ATTACHED_MODIFIERS.reduce((rules, kind) => {
-            rules[kind]= gen_new_att_mod(kind);
+            const other_kind = ATTACHED_MODIFIERS.filter((k) => k != kind);
+            rules[kind] = gen_attached_modifier(kind);
+            rules["_"+kind+"_inner"] = gen_attached_modifier_inner(kind);
             return rules;
         }, {}),
         ...ATTACHED_MODIFIERS.reduce((rules, kind) => {
-            const other_kind = ATTACHED_MODIFIERS.filter((k) => k != kind);
-            rules["_"+kind+"_inner"]=($)=>
-                choice(
-                    seq(
+            rules["_"+kind+"_unclosed"]=($)=>
+                prec.right(seq(
+                    $[kind+"_open"],
+                    repeat(
                         choice(
+                            seq($.soft_break, optional($.not_close)),
                             seq($.whitespace, optional($.not_close)),
                             seq($.word, optional($.not_open)),
                             $.punctuation,
                             $.escape_sequence,
+                            $.linkable,
+                            $["free_"+kind+"_open"],
+                        )
+                    )
+                ))
+            return rules;
+        }, {}),
+        ...VERBATIM_ATTACHED_MODIFIERS.reduce((rules, kind) => {
+            rules[kind] = gen_verbatim_attached_modifier(kind);
+            rules["_"+kind+"_unclosed"] = ($) =>
+                seq(
+                    $[kind+"_open"],
+                    prec.right(repeat1(
+                        choice(
                             seq($.soft_break, optional($.not_close)),
-
-                            ...other_kind.map((k) => [
-                                $[k],
-                                $[k + "_conflict"],
-                            ]).flat(),
-                            ...VERBATIM_ATTACHED_MODIFIERS.map((k) => [
-                                $[k],
-                            ]).flat(),
-                        ),
-                        optional($["_"+kind+"_inner"]),
-                    ),
-                    // ...other_kind.map((k) => [
-                    //     $[k + "_open"],
-                    // ]).flat(),
+                            seq(
+                                alias(token(prec(3, whitespace)), $.whitespace),
+                                optional($.not_close)
+                            ),
+                            $.word,
+                            $.punctuation,
+                            $.escape_sequence,
+                            // consume linkable close modifiers
+                            alias(choice(
+                                token(prec(3, ":")),
+                                token(prec(1, "[")),
+                                token(prec(1, "]")),
+                                token(prec(1, "{")),
+                                token(prec(1, "}")),
+                            ), $.punctuation),
+                            // prevent any open modifier from external scanner
+                            // can't use `not_open` as it won't work for open
+                            // modifier with link modifier
+                            $.__inside_verbatim,
+                        )
+                    )),
                 )
             return rules;
         }, {}),
-        ...ATTACHED_MODIFIERS.reduce((rules, kind) => {
-            rules[kind+"_conflict"]= gen_new_att_mod_conflict(kind);
-            return rules;
-        }, {}),
-        ...VERBATIM_ATTACHED_MODIFIERS.reduce((rules, k) => {
-            rules[k] = gen_new_ver_att_mod(k);
-            // rules[k+"_conflict"] = gen_new_ver_att_mod_conflict(k);
-            return rules;
-        }, {}),
+        identifier: (_) => token(prec(1, /[0-9A-Za-z][0-9A-Za-z\-_\.\+=]*/)),
+        _verbatim_text: ($) => repeat1(choice(/[^\s\\]+/, $.escape_sequence)),
+        argument: ($) => $._verbatim_text,
 
+        strong_delimiting_modifier: (_) => token(seq(repeat2("="), newline_or_eof)),
+        horizontal_rule: (_) => token(seq(repeat2("_"), newline_or_eof)),
         extensions: ($) =>
             seq(
                 token(prec(1, "(")),
@@ -316,9 +404,41 @@ module.exports = grammar({
                     ),
                 )
             ),
+        heading: ($) =>
+            prec.right(
+                seq(
+                    $.heading_prefix,
+                    whitespace,
+                    optional(
+                        seq(
+                            $.extensions,
+                            whitespace,
+                        )
+                    ),
+                    field("title", $.paragraph),
+                    repeat(choice($.heading, $.non_structural)),
+                    optional(choice($._dedent_heading, $.weak_delimiting_modifier))
+                ),
+            ),
         non_structural: ($) =>
             choice(
                 $.paragraph,
+                $.blank_line,
+                $.tag,
+                $.horizontal_rule,
+            ),
+        tag: ($) =>
+            choice(
+                $.strong_carryover_tag,
+                // TODO: add missing parts
+            ),
+        strong_carryover_tag: ($) =>
+            seq(
+                token(prec(1, "#")),
+                field("name", $.identifier),
+                repeat(seq(whitespace, field("argument", $.argument))),
+                // TODO: add missing parts
+                newline_or_eof,
             ),
     },
 });
@@ -326,93 +446,100 @@ module.exports = grammar({
 /**
  * @param {string} kind
  */
-function gen_new_att_mod(kind) {
+function gen_attached_modifier(kind) {
+    const other_kind = ATTACHED_MODIFIERS.filter((k) => k != kind);
     return (/** @type GrammarSymbols<any> */ $) =>
-        prec.dynamic(1,
         choice(
             seq(
-                $[kind + "_open"],
-                // $._inner,
-                $["_"+kind+"_inner"],
-                $[kind + "_close"],
+                $["_"+kind+"_unclosed"],
+                optional($["_"+kind+"_inner"]),
+                $[kind+"_close"],
                 optional($.extensions),
             ),
-            // seq(
-            //     $["free_" + kind + "_open"],
-            //     repeat(
-            //         // gen_new_att_mod_inner(kind)($),
-            //         $._general,
-            //     ),
-            //     $["free_" + kind + "_close"],
-            //     optional($.extensions),
-            // )
-        )
+            seq(
+                $["free_"+kind+"_open"],
+                repeat(
+                    prec.right(choice(
+                        $.whitespace,
+                        seq($.word, optional($.not_open)),
+                        $.punctuation,
+                        $.soft_break,
+                        $.linkable,
+
+                        ...other_kind.map((k) => [
+                            $[k],
+                            $["_"+k + "_unclosed"],
+                        ]).flat(),
+                        ...VERBATIM_ATTACHED_MODIFIERS.map((k) => [
+                            $[k],
+                        ]).flat(),
+
+                        // these two won't be parsed but exist to take higher
+                        // precedence than bold_open inside _italic_unclosed
+                        // inside free-form bold
+                        $["_"+kind+"_unclosed"],
+                        // validity of bold_close here also prevents bold_open
+                        // inside free-form bold
+                        $[kind+"_close"],
+                    ))
+                ),
+                $["free_"+kind+"_close"],
+                optional($.extensions),
+            )
         )
 }
+
 /**
  * @param {string} kind
  */
-function gen_new_att_mod_conflict(kind) {
+function gen_attached_modifier_inner(kind) {
     const other_kind = ATTACHED_MODIFIERS.filter((k) => k != kind);
     return (/** @type GrammarSymbols<any> */ $) =>
         seq(
-            $[kind + "_open"],
             choice(
-                prec.right(repeat1(
-                    choice(
-                        seq($.whitespace, optional($.not_close)),
-                        seq($.word, optional($.not_open)),
-                        $.punctuation,
-                        $.escape_sequence,
-                        seq($.soft_break, optional($.not_close)),
-                        $[kind + "_open"],
-                    )
-                )),
+                seq($.soft_break, optional($.not_close)),
+                seq($.whitespace, optional($.not_close)),
+                seq($.word, optional($.not_open)),
+                $.punctuation,
+                $.escape_sequence,
+                $.linkable,
+                // FIXME: add this without breaking the parser
+                // $["free_"+kind+"_open"],
+
+                ...other_kind.map((k) => [
+                    $[k],
+                    $["_"+k + "_unclosed"],
+                ]).flat(),
+                ...VERBATIM_ATTACHED_MODIFIERS.map((k) => [
+                    $[k],
+                ]).flat(),
             ),
+            optional($["_"+kind+"_inner"])
         )
 }
+
 /**
  * @param {string} kind
  */
-function gen_new_ver_att_mod(kind) {
+function gen_verbatim_attached_modifier(kind) {
     return (/** @type GrammarSymbols<any> */ $) =>
         choice(
             seq(
-                $[kind + "_open"],
-                repeat1(
-                    choice(
-                        seq($.whitespace, optional($.not_close)),
-                        prec.right(seq($.word, optional($.not_open))),
-                        $.punctuation,
-                        $.escape_sequence,
-                        seq($.soft_break, optional($.not_close)),
-
-                        ...ATTACHED_MODIFIERS.map((k) => [
-                            $[k + "_close"],
-                        ]).flat(),
-                        // $[kind + "_open"],
-                    )
-                ),
-                $[kind + "_close"],
+                $["_"+kind+"_unclosed"],
+                $[kind+"_close"],
                 optional($.extensions),
             ),
-            // seq(
-            //     $["free_" + kind + "_open"],
-            //     repeat(
-            //         choice(
-            //             seq($.whitespace, optional($.not_close)),
-            //             prec.right(seq($.word, optional($.not_open))),
-            //             $.punctuation,
-            //             seq($.soft_break, optional($.not_close)),
-            //
-            //             ...ATTACHED_MODIFIERS.map((k) => [
-            //                 $[k + "_close"],
-            //             ]).flat(),
-            //             // $[kind + "_open"],
-            //         )
-            //     ),
-            //     $["free_" + kind + "_close"],
-                // optional($.extensions),
-            // )
+            seq(
+                $["free_"+kind+"_open"],
+                repeat(
+                    choice(
+                        $.soft_break,
+                        $.whitespace,
+                        $.word,
+                        $.punctuation,
+                    )
+                ),
+                $["free_"+kind+"_close"],
+            )
         )
 }
