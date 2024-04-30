@@ -116,7 +116,7 @@
    - This is first unordered list item's head.
      which is paragraph, so you can span
      multiple lines.
-   % This is still part of first unordered list item 
+   % This is still part of first unordered list item
    % |example
      and this is too
      |end

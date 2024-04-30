@@ -134,3 +134,10 @@
 
    so this link is targeting to `* Some heading` from `index.norg` of different
    workspace.
+
+* refactor
+
+** paragraph breaks when parser meet token that isn't part of paragraph
+
+   optional `no_softbreak` after `softbreak` to not parse `|\n\n|` as two
+   softbreak.
