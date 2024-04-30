@@ -6,12 +6,10 @@ free-00: Standalone markup
 (document
   (paragraph
     (bold
-      (bold_open)
-      (free_form_open)
+      (free_bold_open)
       (word)
-      (free_form_close)
-      (bold_close))
-    (paragraph_break)))
+      (free_bold_close))
+))
 
 ================================================================================
 free-01: Disallow escape sequence inside
@@ -23,21 +21,18 @@ free-01: Disallow escape sequence inside
 (document
   (paragraph
     (bold
-      (bold_open)
-      (free_form_open)
+      (free_bold_open)
       (punctuation)
-      (free_form_close)
-      (bold_close))
-    (paragraph_break))
+      (free_bold_close))
+    (soft_break))
+  (blank_line)
   (paragraph
     (bold
-      (bold_open)
-      (free_form_open)
+      (free_bold_open)
       (word)
       (punctuation)
-      (free_form_close)
-      (bold_close))
-    (paragraph_break)))
+      (free_bold_close))
+))
 
 ================================================================================
 free-02: free-form > non-free-form
@@ -49,22 +44,19 @@ free-02: free-form > non-free-form
 (document
   (paragraph
     (bold
-      (bold_open)
-      (free_form_open)
+      (free_bold_open)
       (punctuation)
-      (free_form_close)
-      (bold_close))
-    (paragraph_break))
+      (free_bold_close))
+    (soft_break))
+  (blank_line)
   (paragraph
     (bold
-      (bold_open)
-      (free_form_open)
+      (free_bold_open)
       (punctuation)
       (word)
       (punctuation)
-      (free_form_close)
-      (bold_close))
-    (paragraph_break)))
+      (free_bold_close))
+))
 
 ================================================================================
 free-03: Prevent free-form inside non-free-form
@@ -82,7 +74,7 @@ free-03: Prevent free-form inside non-free-form
       (word)
       (punctuation)
       (bold_close))
-    (paragraph_break)))
+))
 
 ================================================================================
 free-04: Only whitespace
@@ -92,12 +84,10 @@ free-04: Only whitespace
 (document
   (paragraph
     (bold
-      (bold_open)
-      (free_form_open)
+      (free_bold_open)
       (whitespace)
-      (free_form_close)
-      (bold_close))
-    (paragraph_break)))
+      (free_bold_close))
+))
 
 ================================================================================
 free-05: Whitespace on start
@@ -107,13 +97,11 @@ free-05: Whitespace on start
 (document
   (paragraph
     (bold
-      (bold_open)
-      (free_form_open)
+      (free_bold_open)
       (whitespace)
       (word)
-      (free_form_close)
-      (bold_close))
-    (paragraph_break)))
+      (free_bold_close))
+))
 
 ================================================================================
 free-06: Whitespace on end
@@ -123,13 +111,11 @@ free-06: Whitespace on end
 (document
   (paragraph
     (bold
-      (bold_open)
-      (free_form_open)
+      (free_bold_open)
       (word)
       (whitespace)
-      (free_form_close)
-      (bold_close))
-    (paragraph_break)))
+      (free_bold_close))
+))
 
 ================================================================================
 free-07: Whitespace on start and end
@@ -139,14 +125,12 @@ free-07: Whitespace on start and end
 (document
   (paragraph
     (bold
-      (bold_open)
-      (free_form_open)
+      (free_bold_open)
       (whitespace)
       (word)
       (whitespace)
-      (free_form_close)
-      (bold_close))
-    (paragraph_break)))
+      (free_bold_close))
+))
 
 ================================================================================
 free-08: Soft break at start
@@ -157,13 +141,11 @@ word|*
 (document
   (paragraph
     (bold
-      (bold_open)
-      (free_form_open)
+      (free_bold_open)
       (soft_break)
       (word)
-      (free_form_close)
-      (bold_close))
-    (paragraph_break)))
+      (free_bold_close))
+))
 
 ================================================================================
 free-09: Soft break at end
@@ -174,13 +156,11 @@ free-09: Soft break at end
 (document
   (paragraph
     (bold
-      (bold_open)
-      (free_form_open)
+      (free_bold_open)
       (word)
       (soft_break)
-      (free_form_close)
-      (bold_close))
-    (paragraph_break)))
+      (free_bold_close))
+))
 
 ================================================================================
 free-10: Verbatim free-form attached modifier
@@ -190,16 +170,14 @@ free-10: Verbatim free-form attached modifier
 (document
   (paragraph
     (verbatim
-      (verbatim_open)
-      (free_form_open)
+      (free_verbatim_open)
       (whitespace)
       (punctuation)
       (punctuation)
       (word)
       (whitespace)
-      (free_form_close)
-      (verbatim_close))
-    (paragraph_break)))
+      (free_verbatim_close))
+))
 
 ================================================================================
 free-11: Prevent non-free-form inside free-form (verbatim)
@@ -211,22 +189,19 @@ free-11: Prevent non-free-form inside free-form (verbatim)
 (document
   (paragraph
     (verbatim
-      (verbatim_open)
-      (free_form_open)
+      (free_verbatim_open)
       (punctuation)
-      (free_form_close)
-      (verbatim_close))
-    (paragraph_break))
+      (free_verbatim_close))
+    (soft_break))
+  (blank_line)
   (paragraph
     (verbatim
-      (verbatim_open)
-      (free_form_open)
+      (free_verbatim_open)
       (punctuation)
       (word)
       (punctuation)
-      (free_form_close)
-      (verbatim_close))
-    (paragraph_break)))
+      (free_verbatim_close))
+))
 
 ================================================================================
 free-12: free-form close > free-form open
@@ -236,13 +211,10 @@ free-12: free-form close > free-form open
 (document
   (paragraph
     (bold
-      (bold_open)
-      (free_form_open)
-      (open_conflict
-        (italic_open))
-      (free_form_close)
-      (bold_close))
-    (paragraph_break)))
+      (free_bold_open)
+      (punctuation)
+      (free_bold_close))
+))
 
 ================================================================================
 free-13: unclosed free form breaks complete markup
@@ -253,12 +225,10 @@ free-13: unclosed free form breaks complete markup
   (paragraph
     (open_conflict
       (bold_open)
-      (open_conflict
-        (italic_open)
-        (ERROR
-          (free_form_open)
-          (punctuation))))
-    (paragraph_break)))
+      (italic
+        (free_italic_open)
+        (punctuation)
+        (MISSING free_italic_close)))))
 
 ================================================================================
 free-14: unclosed attached modifier inside free-form
@@ -268,14 +238,11 @@ free-14: unclosed attached modifier inside free-form
 (document
   (paragraph
     (bold
-      (bold_open)
-      (free_form_open)
-      (open_conflict
-        (italic_open)
-        (word))
-      (free_form_close)
-      (bold_close))
-    (paragraph_break)))
+      (free_bold_open)
+      (italic_open)
+      (word)
+      (free_bold_close))
+))
 
 ================================================================================
 free-15: open_conflict inside fake free-form
@@ -286,12 +253,11 @@ free-15: open_conflict inside fake free-form
   (paragraph
     (bold
       (bold_open)
-      (open_conflict
-        (italic_open)
-        (word)
-        (punctuation))
+      (italic_open)
+      (word)
+      (punctuation)
       (bold_close))
-    (paragraph_break)))
+))
 
 ================================================================================
 free-16: don't close open_conflict on fake closer
@@ -301,22 +267,18 @@ free-16: don't close open_conflict on fake closer
 (document
   (paragraph
     (bold
-      (bold_open)
-      (free_form_open)
-      (open_conflict
-        (italic_open)
-        (open_conflict
-          (underline_open)
-          (word)
-          (whitespace)
-          (punctuation)
-          (word)
-          (punctuation)
-          (whitespace)
-          (word)))
-      (free_form_close)
-      (bold_close))
-    (paragraph_break)))
+      (free_bold_open)
+      (italic_open)
+      (underline_open)
+      (word)
+      (whitespace)
+      (punctuation)
+      (word)
+      (punctuation)
+      (whitespace)
+      (word)
+      (free_bold_close))
+))
 
 ================================================================================
 free-17: proper close free-form (non-verbatim)
@@ -326,13 +288,11 @@ free-17: proper close free-form (non-verbatim)
 (document
   (paragraph
     (bold
-      (bold_open)
-      (free_form_open)
+      (free_bold_open)
       (word)
       (punctuation)
-      (free_form_close)
-      (bold_close))
-    (paragraph_break)))
+      (free_bold_close))
+))
 
 ================================================================================
 free-18: proper close free-form (verbatim)
@@ -342,13 +302,11 @@ free-18: proper close free-form (verbatim)
 (document
   (paragraph
     (verbatim
-      (verbatim_open)
-      (free_form_open)
+      (free_verbatim_open)
       (word)
       (punctuation)
-      (free_form_close)
-      (verbatim_close))
-    (paragraph_break)))
+      (free_verbatim_close))
+))
 
 ================================================================================
 free-19: verbatim > non-verbatim free-form
@@ -391,7 +349,28 @@ free-20: never ever open bold inside unclosed italic inside free-form bold
 
 *|/word *word*|*
 --------------------------------------------------------------------------------
-(document)
+(document
+  (paragraph
+    (bold
+      (free_bold_open)
+      (italic_open)
+      (word)
+      (whitespace)
+      (punctuation)
+      (word)
+      (free_bold_close))
+    (soft_break))
+  (blank_line)
+  (paragraph
+    (bold
+      (free_bold_open)
+      (italic_open)
+      (word)
+      (whitespace)
+      (punctuation)
+      (word)
+      (punctuation)
+      (free_bold_close))))
 
 ================================================================================
 free-21: don't open free-form bold inside unclosed italic inside bold
@@ -400,6 +379,32 @@ free-21: don't open free-form bold inside unclosed italic inside bold
 
 */word *|word|*
 --------------------------------------------------------------------------------
-(document)
+(document
+  (paragraph
+    (bold
+      (bold_open)
+      (word)
+      (whitespace)
+      (italic_open)
+      (word)
+      (whitespace)
+      (punctuation)
+      (punctuation)
+      (word)
+      (punctuation)
+      (bold_close))
+    (soft_break))
+  (blank_line)
+  (paragraph
+    (bold
+      (bold_open)
+      (italic_open)
+      (word)
+      (whitespace)
+      (punctuation)
+      (punctuation)
+      (word)
+      (punctuation)
+      (bold_close))))
 
 ; vim:ts=2:sw=2:
