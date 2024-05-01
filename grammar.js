@@ -15,17 +15,17 @@ const ATTACHED_MODIFIERS = [
     "italic",
     "underline",
     "strikethrough",
-    // "spoiler",
-    // "superscript",
-    // "subscript",
     "inline_comment",
+    "spoiler",
+    "superscript",
+    "subscript",
 ];
 const VERBATIM_ATTACHED_MODIFIERS = [
     "verbatim",
     "math",
     "inline_macro",
-    "superscript",
-    "subscript",
+    // "superscript",
+    // "subscript",
 ];
 
 /// General TODOS:
@@ -146,6 +146,9 @@ module.exports = grammar({
     inline: ($) => [
         $.__general,
         $.document_content,
+        ...ATTACHED_MODIFIERS.map((k) => [
+            $["_"+k+"_inner"],
+        ]).flat(),
     ],
 
     supertypes: ($) => [
@@ -179,12 +182,7 @@ module.exports = grammar({
             choice(
                 prec.right(seq(
                     choice(
-                        seq($.soft_break, optional($.not_close)),
-                        seq($.whitespace, optional($.not_close)),
-                        seq($.word, optional($.not_open)),
-                        $.punctuation,
-                        $.escape_sequence,
-                        $.linkable,
+                        $.__general,
 
                         ...ATTACHED_MODIFIERS.map((k) => [
                             $[k],
@@ -193,12 +191,14 @@ module.exports = grammar({
                             $[k],
                         ]).flat(),
                     ),
-                    optional($._paragraph_inner)
+                    optional($._paragraph_inner),
                 )),
-                ...VERBATIM_ATTACHED_MODIFIERS.map((k) => [
-                    alias($["_"+k+"_unclosed"], $.open_conflict),
+                ...ATTACHED_MODIFIERS.map((k) => [
+                    alias($["_"+k+"_unclosed_verbatim"], $.unclosed),
                 ]).flat(),
-                $.open_conflict,
+                ...VERBATIM_ATTACHED_MODIFIERS.map((k) => [
+                    alias($["_"+k+"_unclosed"], $.unclosed),
+                ]).flat(),
             ),
 
         punctuation: ($) => token(choice(
@@ -207,6 +207,8 @@ module.exports = grammar({
             // optional "not_open" and "not_close"
             // "_failed_punctuation" will be returned for "*" with lookahead "*"
             // last "*" will be parsed from regex token below
+            // ":" in ":*" will be also "_failed_punctuation" too
+            // we should separate "_failed_open" and "_failed_close"
             repeat1('*'),
             repeat1('/'),
             repeat1('_'),
@@ -290,46 +292,89 @@ module.exports = grammar({
                 token(seq(repeat1("*"), whitespace_or_newline)),
                 $._paragraph_inner,
             ),
-        // NOTE: can't use same method inside complete markups (e.g. `*/word*`)
-        // BUT it is ok because unclosed markup inside closed markup is
-        // actually safe to use
-        open_conflict: ($) =>
-            prec.right(seq(
-                choice(
-                    ...ATTACHED_MODIFIERS.map((k) => [
-                        $["_"+k+"_unclosed"],
-                    ]).flat(),
-                ),
-                optional(
-                    $._paragraph_inner,
-                )
-            )),
         ...ATTACHED_MODIFIERS.reduce((rules, kind) => {
             const other_kind = ATTACHED_MODIFIERS.filter((k) => k != kind);
-            rules[kind] = gen_attached_modifier(kind);
-            rules["_"+kind+"_inner"] = gen_attached_modifier_inner(kind);
-            return rules;
-        }, {}),
-        ...ATTACHED_MODIFIERS.reduce((rules, kind) => {
-            rules["_"+kind+"_unclosed"]=($)=>
+            rules["_"+kind+"_inner"] = ($) =>
+                (choice(
+                    $.__general,
+                    // NOTE: change this to other_kind
+                    ...ATTACHED_MODIFIERS.map((k) => [
+                        $[k],
+                        // NOTE: enabling this will make parser size much smaller
+                        // $[k+"_close"],
+                    ]).flat(),
+                    ...VERBATIM_ATTACHED_MODIFIERS.map((k) => [
+                        $[k],
+                    ]).flat(),
+                ))
+            rules["_"+kind+"_unclosed"] = ($) =>
                 prec.right(seq(
                     $[kind+"_open"],
-                    repeat(
+                    repeat($["_"+kind+"_inner"]),
+                    optional(
                         choice(
-                            seq($.soft_break, optional($.not_close)),
-                            seq($.whitespace, optional($.not_close)),
-                            seq($.word, optional($.not_open)),
-                            $.punctuation,
-                            $.escape_sequence,
-                            $.linkable,
-                            $["free_"+kind+"_open"],
+                            ...ATTACHED_MODIFIERS.map((k) => [
+                                alias($["_"+k+"_unclosed"], $.unclosed),
+                            ]).flat(),
                         )
                     )
                 ))
+            rules["_"+kind+"_unclosed_verbatim"] = ($) =>
+                prec.right(seq(
+                    $[kind+"_open"],
+                    repeat($["_"+kind+"_inner"]),
+                    optional(
+                        choice(
+                            ...ATTACHED_MODIFIERS.map((k) => [
+                                alias($["_"+k+"_unclosed_verbatim"], $.unclosed),
+                            ]).flat(),
+                            ...VERBATIM_ATTACHED_MODIFIERS.map((k) => [
+                                alias($["_"+k+"_unclosed"], $.unclosed),
+                            ]).flat(),
+                        )
+                    )
+                ))
+            rules[kind] = ($) =>
+                choice(
+                    seq(
+                        // NOTE: choice between these two changes parser
+                        // behavior and size dramatically
+                        // $["_"+kind+"_unclosed"],
+                        seq(
+                            $[kind+"_open"],
+                            repeat1($["_"+kind+"_inner"]),
+                        ),
+
+                        $[kind+"_close"],
+                        optional($.extensions)
+                    ),
+                )
             return rules;
         }, {}),
         ...VERBATIM_ATTACHED_MODIFIERS.reduce((rules, kind) => {
-            rules[kind] = gen_verbatim_attached_modifier(kind);
+            rules[kind] = ($) =>
+                choice(
+                    (seq(
+                        $["_"+kind+"_unclosed"],
+                        (seq(
+                            $[kind+"_close"],
+                            optional($.extensions)
+                        )),
+                    )),
+                    seq(
+                        $["free_"+kind+"_open"],
+                        repeat(
+                            choice(
+                                $.soft_break,
+                                $.whitespace,
+                                $.word,
+                                $.punctuation,
+                            )
+                        ),
+                        $["free_"+kind+"_close"],
+                        optional($.extensions)
+                    )
+                )
             rules["_"+kind+"_unclosed"] = ($) =>
                 seq(
                     $[kind+"_open"],
@@ -442,104 +487,3 @@ module.exports = grammar({
             ),
     },
 });
-
-/**
- * @param {string} kind
- */
-function gen_attached_modifier(kind) {
-    const other_kind = ATTACHED_MODIFIERS.filter((k) => k != kind);
-    return (/** @type GrammarSymbols<any> */ $) =>
-        choice(
-            seq(
-                $["_"+kind+"_unclosed"],
-                optional($["_"+kind+"_inner"]),
-                $[kind+"_close"],
-                optional($.extensions),
-            ),
-            seq(
-                $["free_"+kind+"_open"],
-                repeat(
-                    prec.right(choice(
-                        $.whitespace,
-                        seq($.word, optional($.not_open)),
-                        $.punctuation,
-                        $.soft_break,
-                        $.linkable,
-
-                        ...other_kind.map((k) => [
-                            $[k],
-                            $["_"+k + "_unclosed"],
-                        ]).flat(),
-                        ...VERBATIM_ATTACHED_MODIFIERS.map((k) => [
-                            $[k],
-                        ]).flat(),
-
-                        // these two won't be parsed but exist to take higher
-                        // precedence than bold_open inside _italic_unclosed
-                        // inside free-form bold
-                        $["_"+kind+"_unclosed"],
-                        // validity of bold_close here also prevents bold_open
-                        // inside free-form bold
-                        $[kind+"_close"],
-                    ))
-                ),
-                $["free_"+kind+"_close"],
-                optional($.extensions),
-            )
-        )
-}
-
-/**
- * @param {string} kind
- */
-function gen_attached_modifier_inner(kind) {
-    const other_kind = ATTACHED_MODIFIERS.filter((k) => k != kind);
-    return (/** @type GrammarSymbols<any> */ $) =>
-        seq(
-            choice(
-                seq($.soft_break, optional($.not_close)),
-                seq($.whitespace, optional($.not_close)),
-                seq($.word, optional($.not_open)),
-                $.punctuation,
-                $.escape_sequence,
-                $.linkable,
-                // FIXME: add this without breaking the parser
-                // $["free_"+kind+"_open"],
-
-                ...other_kind.map((k) => [
-                    $[k],
-                    $["_"+k + "_unclosed"],
-                ]).flat(),
-                ...VERBATIM_ATTACHED_MODIFIERS.map((k) => [
-                    $[k],
-                ]).flat(),
-            ),
-            optional($["_"+kind+"_inner"])
-        )
-}
-
-/**
- * @param {string} kind
- */
-function gen_verbatim_attached_modifier(kind) {
-    return (/** @type GrammarSymbols<any> */ $) =>
-        choice(
-            seq(
-                $["_"+kind+"_unclosed"],
-                $[kind+"_close"],
-                optional($.extensions),
-            ),
-            seq(
-                $["free_"+kind+"_open"],
-                repeat(
-                    choice(
-                        $.soft_break,
-                        $.whitespace,
-                        $.word,
-                        $.punctuation,
-                    )
-                ),
-                $["free_"+kind+"_close"],
-            )
-        )
-}

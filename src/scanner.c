@@ -486,7 +486,7 @@ Action scan_att_open(Scanner *self, const bool *valid_symbols, const int32_t cha
 
     const token_type kind_token = char_to_attached_mod(character);
     if (kind_token && valid_symbols[kind_token] && !iswspace(lex_next) && !lex_eof) {
-        if (character == lex_next || valid_symbols[kind_token + 1] || valid_symbols[kind_token + 3])
+        if (character == lex_next)
             return FAIL;
         lex_mark_end();
         if (lex_next == '|') {
@@ -520,7 +520,7 @@ bool scan_att_close(Scanner *self, const bool *valid_symbols, const int32_t char
         LOG("%d\n", valid_symbols[close_token]);
     }
     if (kind_token && valid_symbols[close_token] && !is_word(lex_next)) {
-        if (character == lex_next || (!free_form && valid_symbols[close_token + 2]))
+        if (character == lex_next)
             return false;
         lex_mark_end();
         if (lex_next == ':') {

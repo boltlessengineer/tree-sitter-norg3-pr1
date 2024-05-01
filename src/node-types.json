@@ -92,6 +92,10 @@
       "required": true,
       "types": [
         {
+          "type": "bold",
+          "named": true
+        },
+        {
           "type": "bold_close",
           "named": true
         },
@@ -108,35 +112,7 @@
           "named": true
         },
         {
-          "type": "free_bold_close",
-          "named": true
-        },
-        {
-          "type": "free_bold_open",
-          "named": true
-        },
-        {
-          "type": "free_inline_comment_open",
-          "named": true
-        },
-        {
-          "type": "free_italic_open",
-          "named": true
-        },
-        {
-          "type": "free_strikethrough_open",
-          "named": true
-        },
-        {
-          "type": "free_underline_open",
-          "named": true
-        },
-        {
           "type": "inline_comment",
-          "named": true
-        },
-        {
-          "type": "inline_comment_open",
           "named": true
         },
         {
@@ -145,10 +121,6 @@
         },
         {
           "type": "italic",
-          "named": true
-        },
-        {
-          "type": "italic_open",
           "named": true
         },
         {
@@ -176,11 +148,11 @@
           "named": true
         },
         {
-          "type": "strikethrough",
+          "type": "spoiler",
           "named": true
         },
         {
-          "type": "strikethrough_open",
+          "type": "strikethrough",
           "named": true
         },
         {
@@ -193,10 +165,6 @@
         },
         {
           "type": "underline",
-          "named": true
-        },
-        {
-          "type": "underline_open",
           "named": true
         },
         {
@@ -333,10 +301,6 @@
           "named": true
         },
         {
-          "type": "bold_open",
-          "named": true
-        },
-        {
           "type": "escape_sequence",
           "named": true
         },
@@ -345,27 +309,7 @@
           "named": true
         },
         {
-          "type": "free_bold_open",
-          "named": true
-        },
-        {
-          "type": "free_inline_comment_close",
-          "named": true
-        },
-        {
-          "type": "free_inline_comment_open",
-          "named": true
-        },
-        {
-          "type": "free_italic_open",
-          "named": true
-        },
-        {
-          "type": "free_strikethrough_open",
-          "named": true
-        },
-        {
-          "type": "free_underline_open",
+          "type": "inline_comment",
           "named": true
         },
         {
@@ -382,10 +326,6 @@
         },
         {
           "type": "italic",
-          "named": true
-        },
-        {
-          "type": "italic_open",
           "named": true
         },
         {
@@ -413,11 +353,11 @@
           "named": true
         },
         {
-          "type": "strikethrough",
+          "type": "spoiler",
           "named": true
         },
         {
-          "type": "strikethrough_open",
+          "type": "strikethrough",
           "named": true
         },
         {
@@ -430,10 +370,6 @@
         },
         {
           "type": "underline",
-          "named": true
-        },
-        {
-          "type": "underline_open",
           "named": true
         },
         {
@@ -519,10 +455,6 @@
           "named": true
         },
         {
-          "type": "bold_open",
-          "named": true
-        },
-        {
           "type": "escape_sequence",
           "named": true
         },
@@ -531,39 +463,15 @@
           "named": true
         },
         {
-          "type": "free_bold_open",
-          "named": true
-        },
-        {
-          "type": "free_inline_comment_open",
-          "named": true
-        },
-        {
-          "type": "free_italic_close",
-          "named": true
-        },
-        {
-          "type": "free_italic_open",
-          "named": true
-        },
-        {
-          "type": "free_strikethrough_open",
-          "named": true
-        },
-        {
-          "type": "free_underline_open",
-          "named": true
-        },
-        {
           "type": "inline_comment",
           "named": true
         },
         {
-          "type": "inline_comment_open",
+          "type": "inline_macro",
           "named": true
         },
         {
-          "type": "inline_macro",
+          "type": "italic",
           "named": true
         },
         {
@@ -599,11 +507,11 @@
           "named": true
         },
         {
-          "type": "strikethrough",
+          "type": "spoiler",
           "named": true
         },
         {
-          "type": "strikethrough_open",
+          "type": "strikethrough",
           "named": true
         },
         {
@@ -616,10 +524,6 @@
         },
         {
           "type": "underline",
-          "named": true
-        },
-        {
-          "type": "underline_open",
           "named": true
         },
         {
@@ -705,15 +609,15 @@
             "named": true
           },
           {
-            "type": "open_conflict",
-            "named": true
-          },
-          {
             "type": "punctuation",
             "named": true
           },
           {
             "type": "soft_break",
+            "named": true
+          },
+          {
+            "type": "spoiler",
             "named": true
           },
           {
@@ -726,6 +630,10 @@
           },
           {
             "type": "superscript",
+            "named": true
+          },
+          {
+            "type": "unclosed",
             "named": true
           },
           {
@@ -808,15 +716,15 @@
           "named": true
         },
         {
-          "type": "open_conflict",
-          "named": true
-        },
-        {
           "type": "punctuation",
           "named": true
         },
         {
           "type": "soft_break",
+          "named": true
+        },
+        {
+          "type": "spoiler",
           "named": true
         },
         {
@@ -829,6 +737,10 @@
         },
         {
           "type": "superscript",
+          "named": true
+        },
+        {
+          "type": "unclosed",
           "named": true
         },
         {
@@ -929,153 +841,6 @@
     }
   },
   {
-    "type": "open_conflict",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "bold",
-          "named": true
-        },
-        {
-          "type": "bold_open",
-          "named": true
-        },
-        {
-          "type": "escape_sequence",
-          "named": true
-        },
-        {
-          "type": "free_bold_open",
-          "named": true
-        },
-        {
-          "type": "free_inline_comment_open",
-          "named": true
-        },
-        {
-          "type": "free_italic_open",
-          "named": true
-        },
-        {
-          "type": "free_strikethrough_open",
-          "named": true
-        },
-        {
-          "type": "free_underline_open",
-          "named": true
-        },
-        {
-          "type": "inline_comment",
-          "named": true
-        },
-        {
-          "type": "inline_comment_open",
-          "named": true
-        },
-        {
-          "type": "inline_macro",
-          "named": true
-        },
-        {
-          "type": "inline_macro_open",
-          "named": true
-        },
-        {
-          "type": "italic",
-          "named": true
-        },
-        {
-          "type": "italic_open",
-          "named": true
-        },
-        {
-          "type": "linkable",
-          "named": true
-        },
-        {
-          "type": "math",
-          "named": true
-        },
-        {
-          "type": "math_open",
-          "named": true
-        },
-        {
-          "type": "not_close",
-          "named": true
-        },
-        {
-          "type": "not_open",
-          "named": true
-        },
-        {
-          "type": "open_conflict",
-          "named": true
-        },
-        {
-          "type": "punctuation",
-          "named": true
-        },
-        {
-          "type": "soft_break",
-          "named": true
-        },
-        {
-          "type": "strikethrough",
-          "named": true
-        },
-        {
-          "type": "strikethrough_open",
-          "named": true
-        },
-        {
-          "type": "subscript",
-          "named": true
-        },
-        {
-          "type": "subscript_open",
-          "named": true
-        },
-        {
-          "type": "superscript",
-          "named": true
-        },
-        {
-          "type": "superscript_open",
-          "named": true
-        },
-        {
-          "type": "underline",
-          "named": true
-        },
-        {
-          "type": "underline_open",
-          "named": true
-        },
-        {
-          "type": "verbatim",
-          "named": true
-        },
-        {
-          "type": "verbatim_open",
-          "named": true
-        },
-        {
-          "type": "whitespace",
-          "named": true
-        },
-        {
-          "type": "word",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "paragraph",
     "named": true,
     "fields": {},
@@ -1120,7 +885,108 @@
           "named": true
         },
         {
-          "type": "open_conflict",
+          "type": "punctuation",
+          "named": true
+        },
+        {
+          "type": "soft_break",
+          "named": true
+        },
+        {
+          "type": "spoiler",
+          "named": true
+        },
+        {
+          "type": "strikethrough",
+          "named": true
+        },
+        {
+          "type": "subscript",
+          "named": true
+        },
+        {
+          "type": "superscript",
+          "named": true
+        },
+        {
+          "type": "unclosed",
+          "named": true
+        },
+        {
+          "type": "underline",
+          "named": true
+        },
+        {
+          "type": "verbatim",
+          "named": true
+        },
+        {
+          "type": "whitespace",
+          "named": true
+        },
+        {
+          "type": "word",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "path",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "soft_break",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "spoiler",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "bold",
+          "named": true
+        },
+        {
+          "type": "escape_sequence",
+          "named": true
+        },
+        {
+          "type": "extensions",
+          "named": true
+        },
+        {
+          "type": "inline_comment",
+          "named": true
+        },
+        {
+          "type": "inline_macro",
+          "named": true
+        },
+        {
+          "type": "italic",
+          "named": true
+        },
+        {
+          "type": "linkable",
+          "named": true
+        },
+        {
+          "type": "math",
+          "named": true
+        },
+        {
+          "type": "not_close",
+          "named": true
+        },
+        {
+          "type": "not_open",
           "named": true
         },
         {
@@ -1129,6 +995,18 @@
         },
         {
           "type": "soft_break",
+          "named": true
+        },
+        {
+          "type": "spoiler",
+          "named": true
+        },
+        {
+          "type": "spoiler_close",
+          "named": true
+        },
+        {
+          "type": "spoiler_open",
           "named": true
         },
         {
@@ -1163,16 +1041,6 @@
     }
   },
   {
-    "type": "path",
-    "named": true,
-    "fields": {}
-  },
-  {
-    "type": "soft_break",
-    "named": true,
-    "fields": {}
-  },
-  {
     "type": "strikethrough",
     "named": true,
     "fields": {},
@@ -1185,10 +1053,6 @@
           "named": true
         },
         {
-          "type": "bold_open",
-          "named": true
-        },
-        {
           "type": "escape_sequence",
           "named": true
         },
@@ -1197,35 +1061,7 @@
           "named": true
         },
         {
-          "type": "free_bold_open",
-          "named": true
-        },
-        {
-          "type": "free_inline_comment_open",
-          "named": true
-        },
-        {
-          "type": "free_italic_open",
-          "named": true
-        },
-        {
-          "type": "free_strikethrough_close",
-          "named": true
-        },
-        {
-          "type": "free_strikethrough_open",
-          "named": true
-        },
-        {
-          "type": "free_underline_open",
-          "named": true
-        },
-        {
           "type": "inline_comment",
-          "named": true
-        },
-        {
-          "type": "inline_comment_open",
           "named": true
         },
         {
@@ -1234,10 +1070,6 @@
         },
         {
           "type": "italic",
-          "named": true
-        },
-        {
-          "type": "italic_open",
           "named": true
         },
         {
@@ -1265,6 +1097,14 @@
           "named": true
         },
         {
+          "type": "spoiler",
+          "named": true
+        },
+        {
+          "type": "strikethrough",
+          "named": true
+        },
+        {
           "type": "strikethrough_close",
           "named": true
         },
@@ -1282,10 +1122,6 @@
         },
         {
           "type": "underline",
-          "named": true
-        },
-        {
-          "type": "underline_open",
           "named": true
         },
         {
@@ -1338,124 +1174,10 @@
       "required": true,
       "types": [
         {
-          "type": "escape_sequence",
-          "named": true
-        },
-        {
-          "type": "extensions",
-          "named": true
-        },
-        {
-          "type": "free_subscript_close",
-          "named": true
-        },
-        {
-          "type": "free_subscript_open",
-          "named": true
-        },
-        {
-          "type": "not_close",
-          "named": true
-        },
-        {
-          "type": "punctuation",
-          "named": true
-        },
-        {
-          "type": "soft_break",
-          "named": true
-        },
-        {
-          "type": "subscript_close",
-          "named": true
-        },
-        {
-          "type": "subscript_open",
-          "named": true
-        },
-        {
-          "type": "whitespace",
-          "named": true
-        },
-        {
-          "type": "word",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "superscript",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "escape_sequence",
-          "named": true
-        },
-        {
-          "type": "extensions",
-          "named": true
-        },
-        {
-          "type": "free_superscript_close",
-          "named": true
-        },
-        {
-          "type": "free_superscript_open",
-          "named": true
-        },
-        {
-          "type": "not_close",
-          "named": true
-        },
-        {
-          "type": "punctuation",
-          "named": true
-        },
-        {
-          "type": "soft_break",
-          "named": true
-        },
-        {
-          "type": "superscript_close",
-          "named": true
-        },
-        {
-          "type": "superscript_open",
-          "named": true
-        },
-        {
-          "type": "whitespace",
-          "named": true
-        },
-        {
-          "type": "word",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "underline",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
           "type": "bold",
           "named": true
         },
         {
-          "type": "bold_open",
-          "named": true
-        },
-        {
           "type": "escape_sequence",
           "named": true
         },
@@ -1464,35 +1186,7 @@
           "named": true
         },
         {
-          "type": "free_bold_open",
-          "named": true
-        },
-        {
-          "type": "free_inline_comment_open",
-          "named": true
-        },
-        {
-          "type": "free_italic_open",
-          "named": true
-        },
-        {
-          "type": "free_strikethrough_open",
-          "named": true
-        },
-        {
-          "type": "free_underline_close",
-          "named": true
-        },
-        {
-          "type": "free_underline_open",
-          "named": true
-        },
-        {
           "type": "inline_comment",
-          "named": true
-        },
-        {
-          "type": "inline_comment_open",
           "named": true
         },
         {
@@ -1501,10 +1195,6 @@
         },
         {
           "type": "italic",
-          "named": true
-        },
-        {
-          "type": "italic_open",
           "named": true
         },
         {
@@ -1532,6 +1222,228 @@
           "named": true
         },
         {
+          "type": "spoiler",
+          "named": true
+        },
+        {
+          "type": "strikethrough",
+          "named": true
+        },
+        {
+          "type": "subscript",
+          "named": true
+        },
+        {
+          "type": "subscript_close",
+          "named": true
+        },
+        {
+          "type": "subscript_open",
+          "named": true
+        },
+        {
+          "type": "superscript",
+          "named": true
+        },
+        {
+          "type": "underline",
+          "named": true
+        },
+        {
+          "type": "verbatim",
+          "named": true
+        },
+        {
+          "type": "whitespace",
+          "named": true
+        },
+        {
+          "type": "word",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "superscript",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "bold",
+          "named": true
+        },
+        {
+          "type": "escape_sequence",
+          "named": true
+        },
+        {
+          "type": "extensions",
+          "named": true
+        },
+        {
+          "type": "inline_comment",
+          "named": true
+        },
+        {
+          "type": "inline_macro",
+          "named": true
+        },
+        {
+          "type": "italic",
+          "named": true
+        },
+        {
+          "type": "linkable",
+          "named": true
+        },
+        {
+          "type": "math",
+          "named": true
+        },
+        {
+          "type": "not_close",
+          "named": true
+        },
+        {
+          "type": "not_open",
+          "named": true
+        },
+        {
+          "type": "punctuation",
+          "named": true
+        },
+        {
+          "type": "soft_break",
+          "named": true
+        },
+        {
+          "type": "spoiler",
+          "named": true
+        },
+        {
+          "type": "strikethrough",
+          "named": true
+        },
+        {
+          "type": "subscript",
+          "named": true
+        },
+        {
+          "type": "superscript",
+          "named": true
+        },
+        {
+          "type": "superscript_close",
+          "named": true
+        },
+        {
+          "type": "superscript_open",
+          "named": true
+        },
+        {
+          "type": "underline",
+          "named": true
+        },
+        {
+          "type": "verbatim",
+          "named": true
+        },
+        {
+          "type": "whitespace",
+          "named": true
+        },
+        {
+          "type": "word",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "unclosed",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "bold",
+          "named": true
+        },
+        {
+          "type": "bold_open",
+          "named": true
+        },
+        {
+          "type": "escape_sequence",
+          "named": true
+        },
+        {
+          "type": "inline_comment",
+          "named": true
+        },
+        {
+          "type": "inline_comment_open",
+          "named": true
+        },
+        {
+          "type": "inline_macro",
+          "named": true
+        },
+        {
+          "type": "inline_macro_open",
+          "named": true
+        },
+        {
+          "type": "italic",
+          "named": true
+        },
+        {
+          "type": "italic_open",
+          "named": true
+        },
+        {
+          "type": "linkable",
+          "named": true
+        },
+        {
+          "type": "math",
+          "named": true
+        },
+        {
+          "type": "math_open",
+          "named": true
+        },
+        {
+          "type": "not_close",
+          "named": true
+        },
+        {
+          "type": "not_open",
+          "named": true
+        },
+        {
+          "type": "punctuation",
+          "named": true
+        },
+        {
+          "type": "soft_break",
+          "named": true
+        },
+        {
+          "type": "spoiler",
+          "named": true
+        },
+        {
+          "type": "spoiler_open",
+          "named": true
+        },
+        {
           "type": "strikethrough",
           "named": true
         },
@@ -1544,7 +1456,122 @@
           "named": true
         },
         {
+          "type": "subscript_open",
+          "named": true
+        },
+        {
           "type": "superscript",
+          "named": true
+        },
+        {
+          "type": "superscript_open",
+          "named": true
+        },
+        {
+          "type": "unclosed",
+          "named": true
+        },
+        {
+          "type": "underline",
+          "named": true
+        },
+        {
+          "type": "underline_open",
+          "named": true
+        },
+        {
+          "type": "verbatim",
+          "named": true
+        },
+        {
+          "type": "verbatim_open",
+          "named": true
+        },
+        {
+          "type": "whitespace",
+          "named": true
+        },
+        {
+          "type": "word",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "underline",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "bold",
+          "named": true
+        },
+        {
+          "type": "escape_sequence",
+          "named": true
+        },
+        {
+          "type": "extensions",
+          "named": true
+        },
+        {
+          "type": "inline_comment",
+          "named": true
+        },
+        {
+          "type": "inline_macro",
+          "named": true
+        },
+        {
+          "type": "italic",
+          "named": true
+        },
+        {
+          "type": "linkable",
+          "named": true
+        },
+        {
+          "type": "math",
+          "named": true
+        },
+        {
+          "type": "not_close",
+          "named": true
+        },
+        {
+          "type": "not_open",
+          "named": true
+        },
+        {
+          "type": "punctuation",
+          "named": true
+        },
+        {
+          "type": "soft_break",
+          "named": true
+        },
+        {
+          "type": "spoiler",
+          "named": true
+        },
+        {
+          "type": "strikethrough",
+          "named": true
+        },
+        {
+          "type": "subscript",
+          "named": true
+        },
+        {
+          "type": "superscript",
+          "named": true
+        },
+        {
+          "type": "underline",
           "named": true
         },
         {
@@ -1695,22 +1722,6 @@
     "named": true
   },
   {
-    "type": "free_bold_close",
-    "named": true
-  },
-  {
-    "type": "free_bold_open",
-    "named": true
-  },
-  {
-    "type": "free_inline_comment_close",
-    "named": true
-  },
-  {
-    "type": "free_inline_comment_open",
-    "named": true
-  },
-  {
     "type": "free_inline_macro_close",
     "named": true
   },
@@ -1719,51 +1730,11 @@
     "named": true
   },
   {
-    "type": "free_italic_close",
-    "named": true
-  },
-  {
-    "type": "free_italic_open",
-    "named": true
-  },
-  {
     "type": "free_math_close",
     "named": true
   },
   {
     "type": "free_math_open",
-    "named": true
-  },
-  {
-    "type": "free_strikethrough_close",
-    "named": true
-  },
-  {
-    "type": "free_strikethrough_open",
-    "named": true
-  },
-  {
-    "type": "free_subscript_close",
-    "named": true
-  },
-  {
-    "type": "free_subscript_open",
-    "named": true
-  },
-  {
-    "type": "free_superscript_close",
-    "named": true
-  },
-  {
-    "type": "free_superscript_open",
-    "named": true
-  },
-  {
-    "type": "free_underline_close",
-    "named": true
-  },
-  {
-    "type": "free_underline_open",
     "named": true
   },
   {
@@ -1832,6 +1803,14 @@
   },
   {
     "type": "punctuation",
+    "named": true
+  },
+  {
+    "type": "spoiler_close",
+    "named": true
+  },
+  {
+    "type": "spoiler_open",
     "named": true
   },
   {
