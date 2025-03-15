@@ -4,7 +4,7 @@
 
 #include "tree_sitter/parser.h"
 
-// #define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 	#define unreachable() fprintf(stderr, "unreachable src/scanner.c:%d\n", __LINE__)
@@ -39,14 +39,6 @@
 
 #define lex_skip() \
 	self->lexer->advance(self->lexer, true)
-
-#define lex_advance_newline() \
-    if (lex_next == '\r') { \
-        lex_advance(); \
-        if (lex_next == '\n' && !lex_eof) lex_advance(); \
-    } else { \
-        lex_advance(); \
-    }
 
 // vec<u32> ////////////////////////////////////////////////////////////////////
 typedef struct vec_u32 vec_u32;
@@ -144,112 +136,68 @@ static size_t vec_u32_deserialize(struct vec_u32* self, const char* buffer) {
 }
 //////////////////////////////////////////////////////////////////// vec<u32> //
 
-typedef enum token_type token_type;
+typedef struct Scanner Scanner;
+struct Scanner {
+    TSLexer* lexer;
+    /// start column of ranged tag
+    uint32_t range_column;
+    /// prefix count of ranged tag
+    uint32_t range_repeat;
+    /// heading indent stack
+    vec_u32 indent_heading;
+    /// list indent stack
+    vec_u32 indent_list;
+};
 
+typedef enum token_type token_type;
 enum token_type {
-    WHITESPACE,
+    PRECEDING_WHITESPACE,
+    PRECEDING_VERBATIM_WHITESPACE,
 
     BLANK_LINE,
-    FLAG_INSIDE_VERBATIM,
 
-    DESC_OPEN,
-    DESC_CLOSE,
-    TARGET_OPEN,
-    TARGET_CLOSE,
-
-    NOT_OPEN,
-    NOT_CLOSE,
-
-    FREE_FORM_OPEN,
-    FREE_FORM_CLOSE,
+    NOT_OPEN, // right after word char
+    NOT_CLOSE, // right after whitespace
 
     BOLD_OPEN,
     BOLD_CLOSE,
-    FREE_BOLD_OPEN,
-    FREE_BOLD_CLOSE,
 
     ITALIC_OPEN,
     ITALIC_CLOSE,
-    FREE_ITALIC_OPEN,
-    FREE_ITALIC_CLOSE,
 
     UNDERLINE_OPEN,
     UNDERLINE_CLOSE,
-    FREE_UNDERLINE_OPEN,
-    FREE_UNDERLINE_CLOSE,
 
     STRIKETHROUGH_OPEN,
     STRIKETHROUGH_CLOSE,
-    FREE_STRIKETHROUGH_OPEN,
-    FREE_STRIKETHROUGH_CLOSE,
 
     SPOILER_OPEN,
     SPOILER_CLOSE,
-    FREE_SPOILER_OPEN,
-    FREE_SPOILER_CLOSE,
-
     SUPERSCRIPT_OPEN,
     SUPERSCRIPT_CLOSE,
-    FREE_SUPERSCRIPT_OPEN,
-    FREE_SUPERSCRIPT_CLOSE,
-
     SUBSCRIPT_OPEN,
     SUBSCRIPT_CLOSE,
-    FREE_SUBSCRIPT_OPEN,
-    FREE_SUBSCRIPT_CLOSE,
-
-    INLINE_COMMENT_OPEN,
-    INLINE_COMMENT_CLOSE,
-    FREE_INLINE_COMMENT_OPEN,
-    FREE_INLINE_COMMENT_CLOSE,
+    COMMENT_OPEN,
+    COMMENT_CLOSE,
 
     VERBATIM_OPEN,
     VERBATIM_CLOSE,
-    FREE_VERBATIM_OPEN,
-    FREE_VERBATIM_CLOSE,
-
-    INLINE_MATH_OPEN,
-    INLINE_MATH_CLOSE,
-    FREE_INLINE_MATH_OPEN,
-    FREE_INLINE_MATH_CLOSE,
-
-    INLINE_MACRO_OPEN,
-    INLINE_MACRO_CLOSE,
-    FREE_INLINE_MACRO_OPEN,
-    FREE_INLINE_MACRO_CLOSE,
 
     HEADING,
+    TABLE,
     UNORDERED_LIST,
     ORDERED_LIST,
     QUOTE_LIST,
     NULL_LIST,
 
-    WEAK_DELIMITING_MODIFIER,
     DEDENT,
     DEDENT_LIST,
-    FLAG_INDENT_SEGMENT_END,
-    STD_RANGED_PREFIX,
-    STD_RANGED_END,
-    AUTO_SEMI,
+
+    RANGED_OPEN,
+    RANGED_CLOSE,
 
     ERROR_MODE,
 };
-
-typedef enum {
-    ACCEPT,
-    FAIL,
-    SCAN_SKIP, // "SKIP" conflicts with <parser.h>
-} Action;
-
-#define TRY_SCAN(action) \
-    switch (action) {\
-        case SCAN_SKIP:\
-            break;\
-        case ACCEPT:\
-            return true;\
-        case FAIL:\
-            return false;\
-    }
 
 token_type char_to_attached_mod(int32_t c) {
     switch (c) {
@@ -259,7 +207,7 @@ token_type char_to_attached_mod(int32_t c) {
             return ITALIC_OPEN;
         case '_':
             return UNDERLINE_OPEN;
-        case '-':
+        case '~':
             return STRIKETHROUGH_OPEN;
         case '!':
             return SPOILER_OPEN;
@@ -268,15 +216,11 @@ token_type char_to_attached_mod(int32_t c) {
         case ',':
             return SUBSCRIPT_OPEN;
         case '%':
-            return INLINE_COMMENT_OPEN;
+            return COMMENT_OPEN;
         case '`':
             return VERBATIM_OPEN;
-        case '$':
-            return INLINE_MATH_OPEN;
-        case '&':
-            return INLINE_MACRO_OPEN;
     }
-    return WHITESPACE;
+    return PRECEDING_WHITESPACE;
 }
 
 token_type char_to_detached_mod(int32_t c) {
@@ -287,12 +231,8 @@ token_type char_to_detached_mod(int32_t c) {
             return UNORDERED_LIST;
         case '~':
             return ORDERED_LIST;
-        case '>':
-            return QUOTE_LIST;
-        case '%':
-            return NULL_LIST;
     }
-    return WHITESPACE;
+    return PRECEDING_WHITESPACE;
 }
 
 /**
@@ -317,348 +257,362 @@ bool is_whitespace(int32_t character) {
     return character && iswspace(character) && !is_newline(character);
 }
 
-bool match_str(TSLexer* lexer, const char* str) {
-    size_t i = 0;
-    while (str[i] != '\0') {
-        if (lexer->eof(lexer))
-            return false;
-        if (str[i] != lexer->lookahead)
-            return false;
-        i++;
-        lexer->advance(lexer, false);
-    }
-    return true;
-}
-
-typedef struct Scanner Scanner;
-
-struct Scanner {
-    TSLexer* lexer;
-    vec_u32 att_stack;
-    vec_u32 indent_heading;
-    vec_u32 indent_list;
-};
-
-static bool scan_linkable_close(Scanner *self, const bool *valid_symbols, const token_type kind) {
-    if (valid_symbols[kind]) {
-        lex_advance();
-        lex_mark_end();
-        lex_set_result(kind);
-        vec_u32_pop(&self->att_stack);
-        return true;
-    }
-    return false;
-}
-
-Action scan_linkables(Scanner *self, const bool *valid_symbols) {
-    if (lex_next == '[' && valid_symbols[DESC_OPEN]) {
-        lex_advance();
-        lex_mark_end();
-        lex_set_result(DESC_OPEN);
-        vec_u32_push(&self->att_stack, DESC_OPEN);
-        return ACCEPT;
-    }
-    if (lex_next == '{' && valid_symbols[TARGET_OPEN]) {
-        lex_advance();
-        lex_mark_end();
-        lex_set_result(TARGET_OPEN);
-        vec_u32_push(&self->att_stack, TARGET_OPEN);
-        LOG("target\n");
-        return ACCEPT;
-    }
-    if (!vec_u32_empty(&self->att_stack)) {
-        if (lex_next == ']')
-            return scan_linkable_close(self, valid_symbols, DESC_CLOSE) ? ACCEPT : FAIL;
-        if (lex_next == '}')
-            return scan_linkable_close(self, valid_symbols, TARGET_CLOSE) ? ACCEPT : FAIL;
-    }
-    return SCAN_SKIP;
-}
-
-Action scan_detached_modifier(Scanner *self, const bool *valid_symbols, const int32_t character) {
-    LOG("scan_detached_modifier\n");
-    const token_type kind = char_to_detached_mod(character);
-    const bool is_weak_deli_valid = character == '-' && valid_symbols[WEAK_DELIMITING_MODIFIER];
-    if (kind == 0
-        || !(valid_symbols[kind] || is_weak_deli_valid)
-        || !(lex_next == character || is_whitespace(lex_next))
-    ) return SCAN_SKIP;
-
-    vec_u32 *indent_vec = kind == HEADING ? &self->indent_heading : &self->indent_list;
-    size_t count = 1;
-    while (lex_next == character) {
-        count++;
-        lex_advance();
-    }
-
-    // Every detached modifier must be immediately followed by whitespace. If it is not, return false.
-    if (!is_whitespace(lex_next)) {
-        // There is an edge case that can be parsed here however - the weak delimiting modifier may
-        // consist of two or more `-` characters, and must be immediately succeeded with a newline.
-        // If those criteria are met, return the `WEAK_DELIMITING_MODIFIER` instead.
-        if (character == '-' && count >= 2 && is_newline(lex_next) && valid_symbols[WEAK_DELIMITING_MODIFIER]) {
-            // Advance past the newline as well.
-            lex_advance_newline();
-
-            if (!valid_symbols[ERROR_MODE] && !valid_symbols[FLAG_INDENT_SEGMENT_END]) {
-                LOG("FAIL\n");
-                vec_u32_pop(&self->indent_heading);
-            }
-            // When `mark_end()` is called again we essentially move the previous checkpoint to the new "head".
-            lex_mark_end();
-            lex_set_result(WEAK_DELIMITING_MODIFIER);
-            return ACCEPT;
-        }
-        return FAIL;
-    }
-
-    if (!valid_symbols[ERROR_MODE] && valid_symbols[DEDENT_LIST] && (kind == HEADING || count <= vec_u32_back_or(&self->indent_list, 0))) {
-        LOG("try pop\n");
-        vec_u32_pop(&self->indent_list);
-        lex_set_result(DEDENT_LIST);
-        return ACCEPT;
-    }
-    if (!valid_symbols[ERROR_MODE] && valid_symbols[DEDENT] && kind == HEADING && count <= vec_u32_back_or(&self->indent_heading, 0)) {
-        vec_u32_pop(&self->indent_heading);
-        lex_set_result(DEDENT);
-        return ACCEPT;
-    }
-
-    vec_u32_push(indent_vec, count);
-    lex_mark_end();
-    lex_set_result(kind);
-
-    return ACCEPT;
-}
-
-Action scan_prefix(Scanner *self, const bool *valid_symbols, const int32_t character) {
-    // prefix is token with repeated punctuation or single punctuation followed by whitespace
-    LOG("scan_prefix\n");
-    if (character != '|' && character != lex_next && !iswspace(lex_next))
-        return SCAN_SKIP;
-
-    if (character == '*' && valid_symbols[HEADING]) {
-        size_t count = 1;
-        while (lex_next == character) {
-            lex_advance();
-            count++;
-        }
-        if (!is_whitespace(lex_next))
-            return FAIL;
-        if (!valid_symbols[ERROR_MODE] && valid_symbols[DEDENT] && count <= vec_u32_back_or(&self->indent_heading, 0)) {
-            vec_u32_pop(&self->indent_heading);
-            lex_set_result(DEDENT);
-            return ACCEPT;
-        }
-        vec_u32_push(&self->indent_heading, count);
-        lex_mark_end();
-        lex_set_result(HEADING);
-        return ACCEPT;
-    }
-
-    if (character == '|' && valid_symbols[STD_RANGED_PREFIX]) {
-        LOG("standard ranged prefix\n");
-        lex_mark_end();
-        if (match_str(self->lexer, "end")) {
-            if (iswspace(lex_next)) {
-                lex_mark_end();
-                // pop until level-0
-                vec_u32_pop_until(&self->indent_heading, 0);
-                vec_u32_pop_until(&self->indent_list, 0);
-                lex_set_result(STD_RANGED_END);
-                return ACCEPT;
-            }
-        }
-        // append level-0
-        vec_u32_push(&self->indent_heading, 0);
-        vec_u32_push(&self->indent_list, 0);
-        lex_set_result(STD_RANGED_PREFIX);
-        return ACCEPT;
-    }
-    return SCAN_SKIP;
-}
-
-Action scan_att_open(Scanner *self, const bool *valid_symbols, const int32_t character, const bool link_mod) {
-    if (valid_symbols[FLAG_INSIDE_VERBATIM])
-        return SCAN_SKIP;
-    if (link_mod ^ valid_symbols[NOT_OPEN])
-        return SCAN_SKIP;
-
-    const token_type kind_token = char_to_attached_mod(character);
-    if (kind_token && valid_symbols[kind_token] && !iswspace(lex_next) && !lex_eof) {
-        if (character == lex_next)
-            return FAIL;
-        lex_mark_end();
-        if (lex_next == '|') {
-            lex_advance();
-            lex_mark_end();
-            const token_type next_token = char_to_attached_mod(lex_next);
-            if (next_token && valid_symbols[next_token + 3]) { // FREE_*_CLOSE
-                lex_advance();
-                if (!is_word(lex_next)) {
-                    return FAIL;
-                }
-            }
-            lex_set_result(kind_token + 2); // FREE_*_OPEN
-            return ACCEPT;
-        }
-        lex_set_result(kind_token);
-        return ACCEPT;
-    }
-    return SCAN_SKIP;
-}
-bool scan_att_close(Scanner *self, const bool *valid_symbols, const int32_t character, const bool free_form) {
-    if (!free_form && valid_symbols[NOT_CLOSE])
-        return false;
-    const token_type kind_token = char_to_attached_mod(character);
-    const token_type close_token = kind_token + 1 + free_form * 2;
-    // if (kind_token && valid_symbols[close_token - 1]) {
-    //     return false;
-    // }
-    if (kind_token && !is_word(lex_next)) {
-        LOG("%c: %d\n", lex_next, lex_column);
-        LOG("%d\n", valid_symbols[close_token]);
-    }
-    if (kind_token && valid_symbols[close_token] && !is_word(lex_next)) {
-        if (character == lex_next)
-            return false;
-        lex_mark_end();
-        if (lex_next == ':') {
-            lex_advance();
-            if (is_word(lex_next)) {
-                lex_mark_end();
-            }
-        }
-        lex_set_result(close_token);
-        return true;
-    }
-    return false;
-}
-
-bool scan_att_mod(Scanner *self, const bool *valid_symbols, const int32_t character) {
-    LOG("scan_att_mod\n");
-    if (character == ':') {
-        const int32_t next_char = lex_next;
-        lex_advance();
-        TRY_SCAN(scan_att_open(self, valid_symbols, next_char, true));
-        LOG("fail\n");
-        return false;
-    }
-    if (scan_att_close(self, valid_symbols, character, false))
-        return true;
-    TRY_SCAN(scan_att_open(self, valid_symbols, character, false));
-    if (character == '|') {
-        const int32_t next_char = lex_next;
-        lex_advance();
-        if (scan_att_close(self, valid_symbols, next_char, true))
-            return true;
-        LOG("fail\n");
-        return false;
-    }
-    LOG("fail\n");
-    return false;
-}
-
 bool scan(Scanner *self, const bool *valid_symbols) {
     // check if parser is in error-recovery mode
     const bool error_mode = valid_symbols[ERROR_MODE];
 
-    // We return false here to allow the lexer to fall back
-    // to the grammar, which allows the existence of `\0`.
-    if (lex_eof) {
-        return false;
-    }
-
-    // If we are at the beginning of a line, parse any whitespace that we encounter.
-    // This is then returned as `$._preceding_whitespace`, which is part of the `extras`
-    // group, meaning it can theoretically exist "anywhere in the document". This prevents
-    // odd errors with preceding whitespace like ` @end`, where `@end` isn't parsed because
-    // a `$._whitespace` is encountered, causing the parser to continue parsing as if everything
-    // were a `$.paragraph_segment`.
-    const uint32_t start_column = lex_column;
-    lex_mark_end();
-    if (valid_symbols[AUTO_SEMI] && !error_mode) {
-        if (lex_next == ')' || is_newline(lex_next)) {
-            lex_set_result(AUTO_SEMI);
-            return true;
-        }
-    }
-    // if (iswspace(lex_next))
-    //     return scan_newline(self, valid_symbols);
-    TRY_SCAN(scan_linkables(self, valid_symbols));
-
-    const int32_t character = lex_next;
-    lex_advance();
-
-    if (start_column == 0 && is_whitespace(character)) {
-        while (is_whitespace(lex_next))
+    if (
+        valid_symbols[PRECEDING_VERBATIM_WHITESPACE]
+        && lex_column == 0
+    ) {
+        LOG("expected columns: %d\n", self->range_column);
+        while (is_whitespace(lex_next) && lex_column < self->range_column)
             lex_skip();
-
-        TRY_SCAN(scan_prefix(self, valid_symbols, character));
-
         lex_mark_end();
-        lex_set_result(WHITESPACE);
-        return true;
-    }
-    if (start_column == 0)
-        TRY_SCAN(scan_prefix(self, valid_symbols, character));
-
-    if (is_newline(character)) {
-        if (character == '\n' && lex_next == '\r')
+        lex_set_result(PRECEDING_VERBATIM_WHITESPACE);
+        {
+            LOG("try scan range close\n");
+            while (is_whitespace(lex_next))
+                lex_skip();
+            LOG("skipped whitespaces\n");
+            const int32_t character = lex_next;
             lex_advance();
-        lex_mark_end();
-        while (is_whitespace(lex_next))
-            lex_advance();
-        // NOTE: don't do more than this. parse soft_break from grammar.js
-        // as cases when paragraph parsing breaks is when free-form/linkables
-        // are not closed and in that situation, user expect parser tries to
-        // extend until it get the closing modifier
-        if (start_column == 0 && valid_symbols[BLANK_LINE]) {
-            lex_set_result(BLANK_LINE);
-        } else {
-            return false;
+            if (character == '@') {
+                LOG("prefix detected\n");
+                size_t count = 1;
+                while (lex_next == character) {
+                    lex_advance();
+                    count++;
+                }
+                LOG("prefix advanced\n");
+                LOG("expected count: %d\n", self->range_repeat);
+                LOG("parsed count: %d\n", count);
+                if (
+                    count == self->range_repeat
+                    && (lex_next == 'e' && (lex_advance(), true))
+                    && (lex_next == 'n' && (lex_advance(), true))
+                    && (lex_next == 'd' && (lex_advance(), true))
+                    && is_newline(lex_next)
+                ) {
+                    lex_advance();
+                    lex_mark_end();
+                    lex_set_result(RANGED_CLOSE);
+                    self->range_column = 0;
+                    self->range_repeat = 0;
+                    return true;
+                }
+            }
+            LOG("wasn't range close\n");
         }
         return true;
     }
 
-    // if (character == '|' && !iswspace(lex_next) && (valid_symbols[STD_RANGED_PREFIX] || valid_symbols[STD_RANGED_END])) {
+    // capture the initial lexer state and advance
+    const uint32_t start_column = lex_column;
+    const int32_t character = lex_next;
+    // mark end here for zero-width tokens
+    lex_mark_end();
+    if (iswspace(lex_next)) lex_skip();
+    else lex_advance();
+
+    // if (valid_symbols[BLANK_LINE] && start_column == 0 && is_newline(character)) {
     //     lex_mark_end();
-    //     // TODO(boltless): find better format for matching string
-    //     if (lex_next == 'e') {
-    //         lex_advance();
-    //         if (lex_next == 'n') {
-    //             lex_advance();
-    //             if (lex_next == 'd') {
-    //                 lex_advance();
-    //                 if (iswspace(lex_next)) {
-    //                     lex_mark_end();
-    //                     vec_u32_pop_until(&self->indent_heading, 0);
-    //                     vec_u32_pop_until(&self->indent_list, 0);
-    //                     lex_set_result(STD_RANGED_END);
-    //                     return true;
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     vec_u32_push(&self->indent_heading, 0);
-    //     vec_u32_push(&self->indent_list, 0);
-    //     lex_set_result(STD_RANGED_PREFIX);
+    //     lex_set_result(BLANK_LINE);
     //     return true;
     // }
 
-    // TRY_SCAN(scan_detached_modifier(self, valid_symbols, character));
-
-    // if (character == '|')
-    //     return scan_free_form_close(self, valid_symbols, character);
+    // line start with whitespace
+    // possible tokens:
+    // 1. VERBATIM_WHITESPACE  (`    `)
+    // 2. RANGED_CLOSE         (`    @end`)
+    // 3. RANGED_OPEN          (`    @`)
+    // 4. BLANK_LINE           (`    \n`)
+    // 5. PRECEDING_WHITESPACE (`    `)
+    // 6. HEADING              (`    *    `)
+    // 7. DEDENT               (``)
     //
-    // return scan_attached_modifier(self, valid_symbols, character);
-    return scan_att_mod(self, valid_symbols, character);
+    // possible states:
+    // 1. RANGED_CLOSE | VERBATIM_WHITESPACE
+    // 2. ETC
+    if (start_column == 0 && is_whitespace(character)) {
+        while (is_whitespace(lex_next))
+            lex_skip();
+        if (is_newline(lex_next)) {
+            lex_advance();
+            lex_set_result(BLANK_LINE);
+            return true;
+        }
+        // LOG("mark end\n");
+        // lex_mark_end();
+        LOG("checking prefix\n");
+        if (!is_word(lex_next)) {
+            // shadow `character` to match function signature
+            const int32_t character = lex_next;
+            lex_advance();
+
+            if (
+                valid_symbols[HEADING]
+                && character == '*'
+                && (lex_next == '*' || iswspace(lex_next))
+            ) {
+                size_t count = 1;
+                while (lex_next == character) {
+                    lex_advance();
+                    count++;
+                }
+                if (iswspace(lex_next)) {
+                    if (valid_symbols[DEDENT] && count <= vec_u32_back_or(&self->indent_heading, 0)) {
+                        vec_u32_pop(&self->indent_heading);
+                        lex_set_result(DEDENT);
+                        return true;
+                    }
+                    vec_u32_push(&self->indent_heading, count);
+                    lex_mark_end();
+                    lex_set_result(HEADING);
+                    return true;
+                }
+                // SKIP
+            } else if (
+                valid_symbols[RANGED_CLOSE]
+                && self->range_repeat > 0
+                && character == '@'
+            ) {
+                size_t count = 1;
+                while (lex_next == character) {
+                    lex_advance();
+                    count++;
+                }
+                if (
+                    count == self->range_repeat
+                    && (lex_next == 'e' && (lex_advance(), true))
+                    && (lex_next == 'n' && (lex_advance(), true))
+                    && (lex_next == 'd' && (lex_advance(), true))
+                    && is_newline(lex_next)
+                ) {
+                    lex_advance();
+                    lex_mark_end();
+                    lex_set_result(RANGED_CLOSE);
+                    self->range_column = 0;
+                    self->range_repeat = 0;
+                    return true;
+                }
+                return false;
+            } else if (
+                valid_symbols[RANGED_OPEN]
+                && character == '@'
+            ) {
+                size_t count = 1;
+                while (lex_next == character) {
+                    lex_advance();
+                    count++;
+                }
+                if (!iswspace(lex_next)) {
+                    lex_mark_end();
+                    lex_set_result(RANGED_OPEN);
+                    self->range_column = lex_column - 1;
+                    self->range_repeat = count;
+                    return true;
+                }
+                // SKIP
+            }
+        } else {
+            lex_mark_end();
+        }
+        // fallback to preceding whitespace
+        if (valid_symbols[PRECEDING_WHITESPACE]) {
+            lex_set_result(PRECEDING_WHITESPACE);
+            return true;
+        }
+        return false;
+        // lookahead for
+        // ~ blank_line (_, \n)
+        // ~ heading    (_, *, _)
+        //              (_, *, *)
+        // ~ macro      (_, @, w)
+        // ~ whitespace (_)
+    } else if (start_column == 0) {
+            if (
+                valid_symbols[HEADING]
+                && character == '*'
+                && (lex_next == '*' || iswspace(lex_next))
+            ) {
+                size_t count = 1;
+                while (lex_next == character) {
+                    lex_advance();
+                    count++;
+                }
+                if (iswspace(lex_next)) {
+                    if (valid_symbols[DEDENT] && count <= vec_u32_back_or(&self->indent_heading, 0)) {
+                        vec_u32_pop(&self->indent_heading);
+                        lex_set_result(DEDENT);
+                        return true;
+                    }
+                    vec_u32_push(&self->indent_heading, count);
+                    lex_mark_end();
+                    lex_set_result(HEADING);
+                    return true;
+                }
+                // SKIP
+            } else if (
+                valid_symbols[RANGED_CLOSE]
+                && self->range_repeat > 0
+                && character == '@'
+                && (lex_next == '@' || lex_next == 'e')
+            ) {
+                size_t count = 1;
+                while (lex_next == character) {
+                    lex_advance();
+                    count++;
+                }
+                if (
+                    count == self->range_repeat
+                    && (lex_next == 'e' && (lex_advance(), true))
+                    && (lex_next == 'n' && (lex_advance(), true))
+                    && (lex_next == 'd' && (lex_advance(), true))
+                    && is_newline(lex_next)
+                ) {
+                    lex_advance();
+                    lex_mark_end();
+                    lex_set_result(RANGED_CLOSE);
+                    self->range_column = 0;
+                    self->range_repeat = 0;
+                    return true;
+                }
+                return false;
+            } else if (
+                valid_symbols[RANGED_OPEN]
+                && character == '@'
+                && (lex_next == '@' || !iswspace(lex_next))
+            ) {
+                size_t count = 1;
+                while (lex_next == character) {
+                    lex_advance();
+                    count++;
+                }
+                if (!iswspace(lex_next)) {
+                    lex_mark_end();
+                    lex_set_result(RANGED_OPEN);
+                    self->range_column = lex_column;
+                    self->range_repeat = count;
+                    return true;
+                }
+                // SKIP
+            }
+    }
+
+    // if (start_column == 0) {
+    //     if (is_whitespace(character)) {
+    //         lex_set_result(BLANK_LINE);
+    //         while (is_whitespace(lex_next))
+    //             lex_advance();
+    //         if (is_newline(lex_next)) {
+    //             lex_advance();
+    //             lex_set_result(BLANK_LINE);
+    //             lex_mark_end();
+    //             return true;
+    //         }
+    //
+    //         // TODO: try parse prefix
+    //
+    //         lex_mark_end();
+    //         return true;
+    //     } else {
+    //         // scan detached modifier prefix scan
+    //         if (valid_symbols[HEADING] && character == '*' && (lex_next == '*' || iswspace(lex_next))) {
+    //             size_t count = 1;
+    //             // TODO: allow whitespace between prefixes
+    //             while (lex_next == character) {
+    //                 lex_advance();
+    //                 count++;
+    //             }
+    //             if (!iswspace(lex_next))
+    //                 return false;
+    //             if (valid_symbols[DEDENT] && count <= vec_u32_back_or(&self->indent_heading, 0)) {
+    //                 vec_u32_pop(&self->indent_heading);
+    //                 lex_set_result(DEDENT);
+    //                 return true;
+    //             }
+    //             vec_u32_push(&self->indent_heading, count);
+    //             lex_mark_end();
+    //             lex_set_result(HEADING);
+    //             return true;
+    //         } else if (valid_symbols[RANGED_CLOSE] && self->range_repeat > 0 && character == '@') {
+    //             size_t count = 1;
+    //             while (lex_next == character) {
+    //                 lex_advance();
+    //                 count++;
+    //             }
+    //             if (count != self->range_repeat)
+    //                 return false;
+    //             if (
+    //                 (lex_next == 'e' && (lex_advance(), true))
+    //                 && (lex_next == 'n' && (lex_advance(), true))
+    //                 && (lex_next == 'd' && (lex_advance(), true))
+    //             ) {
+    //                 if (is_newline(lex_next)) {
+    //                     lex_advance();
+    //                     lex_mark_end();
+    //                     lex_set_result(RANGED_CLOSE);
+    //                     self->range_column = 0;
+    //                     self->range_repeat = 0;
+    //                     return true;
+    //                 }
+    //             }
+    //             return false;
+    //         } else if (valid_symbols[RANGED_OPEN] && character == '@') {
+    //             size_t count = 1;
+    //             while (lex_next == character) {
+    //                 lex_advance();
+    //                 count++;
+    //             }
+    //             if (iswspace(lex_next)) {
+    //                 return false;
+    //             }
+    //             lex_mark_end();
+    //             lex_set_result(RANGED_OPEN);
+    //             self->range_column = lex_column;
+    //             self->range_repeat = count;
+    //             return true;
+    //         }
+    //     }
+    // }
+
+    // scan attached modifier
+    const token_type kind_token = char_to_attached_mod(character);
+    if (kind_token) {
+        LOG("meet attached modifier\n");
+        if (
+            !valid_symbols[NOT_OPEN]
+            && valid_symbols[kind_token]
+            && !iswspace(lex_next)
+            && !lex_eof
+            && !valid_symbols[VERBATIM_CLOSE]
+        ) {
+            if (character == lex_next) // **
+                return false;
+            lex_mark_end();
+            lex_set_result(kind_token);
+            return true;
+        } else if (
+            !valid_symbols[NOT_CLOSE]
+            && valid_symbols[kind_token + 1]
+            && !is_word(lex_next)
+        ) {
+            if (character == lex_next)
+                return false;
+            lex_mark_end();
+            lex_set_result(kind_token + 1);
+            return true;
+        }
+    }
+    LOG("none\n");
+
+    return false;
 }
 
 void *tree_sitter_norg_external_scanner_create() {
     LOG("tree_sitter_norg_external_scanner_create\n");
 	Scanner* self = malloc(sizeof(Scanner));
-    self->att_stack = vec_u32_new();
     self->indent_heading = vec_u32_new();
     self->indent_list = vec_u32_new();
     return self;
@@ -667,7 +621,6 @@ void *tree_sitter_norg_external_scanner_create() {
 void tree_sitter_norg_external_scanner_destroy(void *payload) {
     LOG("tree_sitter_norg_external_scanner_destroy\n");
 	struct Scanner* scanner = payload;
-	vec_u32_drop(scanner->att_stack);
 	vec_u32_drop(scanner->indent_heading);
 	vec_u32_drop(scanner->indent_list);
 	free(scanner);
@@ -680,7 +633,6 @@ unsigned tree_sitter_norg_external_scanner_serialize(
     LOG("tree_sitter_norg_external_scanner_serialize\n");
 	struct Scanner* scanner = payload;
 	size_t written = 0;
-	written += vec_u32_serialize(&scanner->att_stack, buffer + written);
 	written += vec_u32_serialize(&scanner->indent_heading, buffer + written);
 	written += vec_u32_serialize(&scanner->indent_list, buffer + written);
 	return written;
@@ -693,12 +645,8 @@ void tree_sitter_norg_external_scanner_deserialize(
 ) {
     LOG("tree_sitter_norg_external_scanner_deserialize\n");
 	Scanner* scanner = payload;
-    scanner->att_stack.len = 0;
-    scanner->indent_heading.len = 0;
-    scanner->indent_list.len = 0;
 	if (length != 0) {
 		size_t read = 0;
-		read += vec_u32_deserialize(&scanner->att_stack, buffer + read);
 		read += vec_u32_deserialize(&scanner->indent_heading, buffer + read);
 		read += vec_u32_deserialize(&scanner->indent_list, buffer + read);
     }
@@ -710,3 +658,4 @@ bool tree_sitter_norg_external_scanner_scan(void *payload, TSLexer *lexer, const
     scanner->lexer = lexer;
     return scan(scanner, valid_symbols);
 }
+

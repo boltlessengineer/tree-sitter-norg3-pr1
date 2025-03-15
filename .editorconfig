@@ -6,13 +6,16 @@ end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
 
+[*.txt]
+trim_trailing_whitespace = false
+
 [*.{json,toml,yml,gyp}]
 indent_style = space
 indent_size = 2
 
 [*.js]
 indent_style = space
-indent_size = 2
+indent_size = 4
 
 [*.rs]
 indent_style = space

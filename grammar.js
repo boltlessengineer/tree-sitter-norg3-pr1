@@ -15,22 +15,12 @@ const ATTACHED_MODIFIERS = [
     "italic",
     "underline",
     "strikethrough",
-    "inline_comment",
-    "spoiler",
-    "superscript",
-    "subscript",
-];
-const VERBATIM_ATTACHED_MODIFIERS = [
-    "verbatim",
-    "math",
-    "inline_macro",
+
+    // "inline_comment",
+    // "spoiler",
     // "superscript",
     // "subscript",
 ];
-
-/// General TODOS:
-//  - Abstract repeating patterns (e.g. nestable detached modifiers) into Javascript functions.
-//  - Make every node have an alias($.node, $.node_prefix). Only some currently do.
 
 /**
  * @param {RuleOrLiteral} rule
@@ -43,447 +33,251 @@ module.exports = grammar({
     name: "norg",
 
     // Tell treesitter we want to handle whitespace ourselves
-    extras: ($) => [
-        $._preceding_whitespace,
-    ],
+    extras: (_) => [],
     externals: ($) => [
         $._preceding_whitespace,
+        $._preceding_verbatim_whitespace,
 
-        $.blank_line,
-        $.__inside_verbatim,
-
-        $.desc_open,
-        $.desc_close,
-        $.target_open,
-        $.target_close,
+        $._blank_line,
 
         $.not_open,
         $.not_close,
 
-        $.free_form_open,
-        $.free_form_close,
-
         $.bold_open,
         $.bold_close,
-        $.free_bold_open,
-        $.free_bold_close,
 
         $.italic_open,
         $.italic_close,
-        $.free_italic_open,
-        $.free_italic_close,
 
         $.underline_open,
         $.underline_close,
-        $.free_underline_open,
-        $.free_underline_close,
 
         $.strikethrough_open,
         $.strikethrough_close,
-        $.free_strikethrough_open,
-        $.free_strikethrough_close,
 
         $.spoiler_open,
         $.spoiler_close,
-        $.free_spoiler_open,
-        $.free_spoiler_close,
-
         $.superscript_open,
         $.superscript_close,
-        $.free_superscript_open,
-        $.free_superscript_close,
-
         $.subscript_open,
         $.subscript_close,
-        $.free_subscript_open,
-        $.free_subscript_close,
-
         $.inline_comment_open,
         $.inline_comment_close,
-        $.free_inline_comment_open,
-        $.free_inline_comment_close,
 
         $.verbatim_open,
         $.verbatim_close,
-        $.free_verbatim_open,
-        $.free_verbatim_close,
-
-        $.math_open,
-        $.math_close,
-        $.free_math_open,
-        $.free_math_close,
-
-        $.inline_macro_open,
-        $.inline_macro_close,
-        $.free_inline_macro_open,
-        $.free_inline_macro_close,
 
         $.heading_prefix,
+        $.table_prefix,
+
         $.unordered_list_prefix,
         $.ordered_list_prefix,
         $.quote_list_prefix,
         $.null_list_prefix,
 
-        $.weak_delimiting_modifier,
         $._dedent_heading,
         $._dedent_list,
-        $.__indent_seg_end,
-        $.std_ranged_tag_prefix,
-        $.std_ranged_tag_end,
-        $._auto_semi,
+
+        $.ranged_open,
+        $.ranged_close,
 
         $._error_sentinel,
     ],
 
     conflicts: () => [],
 
-    precedences: () => [
-        // TODO:
-        // $.whitespace < $.link_scope_prefix < $.verbatim_whitespace
-        //                                    < $.verbatim_punctuation
-    ],
+    precedences: () => [],
 
-    inline: ($) => [
-        $.__general,
-        $.document_content,
-        ...ATTACHED_MODIFIERS.map((k) => [
-            $["_"+k+"_inner"],
-        ]).flat(),
-    ],
+    inline: (_) => [],
 
     supertypes: ($) => [
-        $.non_structural,
-        $.tag,
-        $.linkable,
+        $.block,
     ],
 
     rules: {
-        document: ($) => repeat($.document_content),
-        document_content: ($) =>
-            choice(
-                $.heading,
-                $.non_structural,
-                $.strong_delimiting_modifier,
-            ),
-        paragraph: ($) => seq(
-            $._paragraph_inner,
+        document: ($) => repeat($.block),
+
+        // NOTE: for debugging
+        WS: (_) => whitespace,
+        NL: (_) => newline,
+        NL_OR_EOF: (_) => newline_or_eof,
+        WORD: (_) => word,
+
+        block: ($) => choice(
+            $.paragraph,
+            $.section,
+            $.ranged_tag,
+            $._blank_line,
         ),
-        __general: ($) =>
+        section: ($) => prec.right(seq(
+            $.heading,
+            repeat($.block),
+            optional($._dedent_heading),
+        )),
+        heading: ($) => seq(
+            $.heading_prefix,
+            optional(seq(
+                whitespace,
+                optional($.paragraph),
+            )),
+            token(prec(1, newline)),
+        ),
+        paragraph: ($) => seq(optional($._preceding_whitespace), $._inline),
+        _inline: ($) => choice(
+            prec.right(seq(
+                choice(
+                    seq($.word, optional($.not_open)),
+                    seq($.whitespace, optional($.not_close)),
+                    seq($.soft_break, optional($.not_close)),
+                    seq($.soft_break, $._preceding_whitespace),
+                    seq($.hard_break, optional($.not_close)),
+                    $.escape_sequence,
+                    $.punctuation,
+                    ...ATTACHED_MODIFIERS.map((k) => [
+                        $[k],
+                    ]).flat(),
+                    $.verbatim,
+                    $.link,
+                    $.anchor,
+                    $.inline_macro,
+                ),
+                optional($._inline),
+            )),
+            ...ATTACHED_MODIFIERS.map((k) => [
+                $["unclosed_" + k],
+                $["ext_unclosed_" + k],
+            ]).flat(),
+            $.unclosed_verbatim,
+            $.unclosed_link,
+            $.unclosed_anchor,
+        ),
+        _verbatim_inline: ($) => prec.right(2, seq(
             choice(
-                seq($.soft_break, optional($.not_close)),
+                $.word,
                 seq($.whitespace, optional($.not_close)),
-                seq($.word, optional($.not_open)),
-                $.punctuation,
+                seq($.soft_break, optional($.not_close)),
+                seq($.hard_break, optional($.not_close)),
                 $.escape_sequence,
-                $.linkable,
+                $.punctuation,
             ),
-        // TODO: force to end with soft_break or \0
-        _paragraph_inner: ($) =>
-            choice(
-                prec.right(seq(
-                    choice(
-                        $.__general,
-
-                        ...ATTACHED_MODIFIERS.map((k) => [
-                            $[k],
-                        ]).flat(),
-                        ...VERBATIM_ATTACHED_MODIFIERS.map((k) => [
-                            $[k],
-                        ]).flat(),
-                    ),
-                    optional($._paragraph_inner),
-                )),
-                ...ATTACHED_MODIFIERS.map((k) => [
-                    alias($["_"+k+"_unclosed_verbatim"], $.unclosed),
-                ]).flat(),
-                ...VERBATIM_ATTACHED_MODIFIERS.map((k) => [
-                    alias($["_"+k+"_unclosed"], $.unclosed),
-                ]).flat(),
-            ),
-
-        punctuation: ($) => token(choice(
-            // TODO: replace these repeated tokens to
-            // external token "_failed_punctuation" immediately followed by
-            // optional "not_open" and "not_close"
-            // "_failed_punctuation" will be returned for "*" with lookahead "*"
-            // last "*" will be parsed from regex token below
-            // ":" in ":*" will be also "_failed_punctuation" too
-            // we should separate "_failed_open" and "_failed_close"
+            optional($._verbatim_inline),
+        )),
+        punctuation: (_) => token(choice(
             repeat1('*'),
             repeat1('/'),
             repeat1('_'),
-            repeat1('-'),
-            repeat1('!'),
+            repeat1('~'),
             repeat1('`'),
-            repeat1('&'),
-            repeat1('$'),
-            // '#',
-            // '+',
-            // '.',
-            // '|',
-            // '@',
-            // '=',
             /[^\n\r\p{Z}\p{L}\p{N}]/u,
         )),
 
-        word: (_) => token(word),
-        whitespace: (_) => token(prec(1, whitespace)),
+        word: (_) => word,
+        whitespace: (_) => whitespace,
         soft_break: (_) => newline,
-
-        escape_sequence: (_) => token(seq("\\", choice(/./, newline))),
-
-        linkable: ($) => choice($.anchor, $.link),
-        anchor: ($) =>
-            prec.right(seq(
-                $.link_description,
-                optional($.link_target),
-                optional($.extensions),
-            )),
-        link: ($) =>
-            prec.right(seq(
-                $.link_target,
-                optional($.link_description),
-                optional($.extensions),
-            )),
-        link_description: ($) =>
-            seq(
-                "[",
-                optional(field("description", $._paragraph_inner)),
-                "]",
-            ),
-        link_target: ($) =>
-            seq(
-                "{",
-                choice(
-                    seq(
-                        optional($.link_scope_prefix),
-                        $._link_scope_list,
-                    )
-                ),
-                "}",
-            ),
-        link_scope_prefix: (_) =>
-            token(prec(2, seq(
-                optional(whitespace_or_newline),
-                ":",
-                optional(whitespace_or_newline),
-            ))),
-        // HACK: implement proper filepath parsing
-        path: (_) => word,
-        _link_scope_list: ($) =>
-            prec.right(seq(
-                choice(
-                    $.link_scope_heading,
-                    $.link_scope_file,
-                ),
-                repeat(
-                    seq(
-                        $.link_scope_prefix,
-                        optional($._link_scope_list),
-                    ),
-                ),
-            )),
-        link_scope_file: ($) =>
-            seq(
-                $.path,
-            ),
-        link_scope_heading: ($) =>
-            seq(
-                token(seq(repeat1("*"), whitespace_or_newline)),
-                $._paragraph_inner,
-            ),
+        escape_sequence: (_) => /\\[^\n\r\p{L}\p{N}]/,
+        hard_break: (_) => token(seq("\\", newline)),
         ...ATTACHED_MODIFIERS.reduce((rules, kind) => {
-            const other_kind = ATTACHED_MODIFIERS.filter((k) => k != kind);
-            rules["_"+kind+"_inner"] = ($) =>
-                (choice(
-                    $.__general,
-                    // NOTE: change this to other_kind
-                    ...ATTACHED_MODIFIERS.map((k) => [
-                        $[k],
-                        // NOTE: enabling this will make parser size much smaller
-                        // $[k+"_close"],
-                    ]).flat(),
-                    ...VERBATIM_ATTACHED_MODIFIERS.map((k) => [
-                        $[k],
-                    ]).flat(),
-                ))
-            rules["_"+kind+"_unclosed"] = ($) =>
-                prec.right(seq(
-                    $[kind+"_open"],
-                    repeat($["_"+kind+"_inner"]),
-                    optional(
-                        choice(
-                            ...ATTACHED_MODIFIERS.map((k) => [
-                                alias($["_"+k+"_unclosed"], $.unclosed),
-                            ]).flat(),
-                        )
-                    )
-                ))
-            rules["_"+kind+"_unclosed_verbatim"] = ($) =>
-                prec.right(seq(
-                    $[kind+"_open"],
-                    repeat($["_"+kind+"_inner"]),
-                    optional(
-                        choice(
-                            ...ATTACHED_MODIFIERS.map((k) => [
-                                alias($["_"+k+"_unclosed_verbatim"], $.unclosed),
-                            ]).flat(),
-                            ...VERBATIM_ATTACHED_MODIFIERS.map((k) => [
-                                alias($["_"+k+"_unclosed"], $.unclosed),
-                            ]).flat(),
-                        )
-                    )
-                ))
-            rules[kind] = ($) =>
-                choice(
-                    seq(
-                        // NOTE: choice between these two changes parser
-                        // behavior and size dramatically
-                        // $["_"+kind+"_unclosed"],
-                        seq(
-                            $[kind+"_open"],
-                            repeat1($["_"+kind+"_inner"]),
-                        ),
-
-                        $[kind+"_close"],
-                        optional($.extensions)
-                    ),
-                )
-            return rules;
+            rules[kind] = (/** @type any */ $) => prec.right(seq(
+                $[kind + "_open"],
+                $._inline,
+                $[kind + "_close"],
+                optional($.inline_attributes),
+            ));
+            rules["unclosed_" + kind] = (/** @type any */ $) => prec.right(seq(
+                $[kind + "_open"],
+                $._inline,
+            ));
+            rules["ext_unclosed_" + kind] = (/** @type any */ $) => prec.right(seq(
+                $[kind + "_open"],
+                $._inline,
+                $[kind + "_close"],
+                $.unclosed_inline_attributes,
+            ));
+            return rules
         }, {}),
-        ...VERBATIM_ATTACHED_MODIFIERS.reduce((rules, kind) => {
-            rules[kind] = ($) =>
-                choice(
-                    (seq(
-                        $["_"+kind+"_unclosed"],
-                        (seq(
-                            $[kind+"_close"],
-                            optional($.extensions)
-                        )),
-                    )),
-                    seq(
-                        $["free_"+kind+"_open"],
-                        repeat(
-                            choice(
-                                $.soft_break,
-                                $.whitespace,
-                                $.word,
-                                $.punctuation,
-                            )
-                        ),
-                        $["free_"+kind+"_close"],
-                        optional($.extensions)
-                    )
-                )
-            rules["_"+kind+"_unclosed"] = ($) =>
-                seq(
-                    $[kind+"_open"],
-                    prec.right(repeat1(
-                        choice(
-                            seq($.soft_break, optional($.not_close)),
-                            seq(
-                                alias(token(prec(3, whitespace)), $.whitespace),
-                                optional($.not_close)
-                            ),
-                            $.word,
-                            $.punctuation,
-                            $.escape_sequence,
-                            // consume linkable close modifiers
-                            alias(choice(
-                                token(prec(3, ":")),
-                                token(prec(1, "[")),
-                                token(prec(1, "]")),
-                                token(prec(1, "{")),
-                                token(prec(1, "}")),
-                            ), $.punctuation),
-                            // prevent any open modifier from external scanner
-                            // can't use `not_open` as it won't work for open
-                            // modifier with link modifier
-                            $.__inside_verbatim,
-                        )
-                    )),
-                )
-            return rules;
-        }, {}),
-        identifier: (_) => token(prec(1, /[0-9A-Za-z][0-9A-Za-z\-_\.\+=]*/)),
-        _verbatim_text: ($) => repeat1(choice(/[^\s\\]+/, $.escape_sequence)),
-        argument: ($) => $._verbatim_text,
 
-        strong_delimiting_modifier: (_) => token(seq(repeat2("="), newline_or_eof)),
-        horizontal_rule: (_) => token(seq(repeat2("_"), newline_or_eof)),
-        extensions: ($) =>
-            seq(
-                token(prec(1, "(")),
-                repeat(
-                    choice(
-                        $.ext_attribute,
-                        ";",
-                        token(seq(optional(whitespace), newline)),
-                    ),
-                ),
-                ")",
-            ),
-        // TODO: add support for escape sequence in identifier/parameter
-        ext_identifier: (_) => token(/[^\s\n\r;\(\)]+/),
-        ext_param: (_) => token(/[^\s\n\r;\(\)][^\n\r;\(\)]*/),
-        ext_attribute: ($) =>
-            choice(
-                seq(
-                    optional(whitespace),
-                    field("key", $.ext_identifier),
-                    optional(whitespace),
-                    optional(
-                        field("value", $.ext_param)
-                    ),
-                    choice(
-                        ";",
-                        $._auto_semi,
-                    ),
-                ),
-                seq(
-                    // alias(whitespace, $.undone),
-                    whitespace,
-                    choice(
-                        ";",
-                        $._auto_semi,
-                    ),
-                )
-            ),
-        heading: ($) =>
-            prec.right(
-                seq(
-                    $.heading_prefix,
-                    whitespace,
-                    optional(
-                        seq(
-                            $.extensions,
-                            whitespace,
-                        )
-                    ),
-                    field("title", $.paragraph),
-                    repeat(choice($.heading, $.non_structural)),
-                    optional(choice($._dedent_heading, $.weak_delimiting_modifier))
-                ),
-            ),
-        non_structural: ($) =>
-            choice(
-                $.paragraph,
-                $.blank_line,
-                $.tag,
-                $.horizontal_rule,
-            ),
-        tag: ($) =>
-            choice(
-                $.strong_carryover_tag,
-                // TODO: add missing parts
-            ),
-        strong_carryover_tag: ($) =>
-            seq(
-                token(prec(1, "#")),
-                field("name", $.identifier),
-                repeat(seq(whitespace, field("argument", $.argument))),
-                // TODO: add missing parts
-                newline_or_eof,
-            ),
+        verbatim: ($) => prec.right(seq(
+            $.verbatim_open,
+            $._verbatim_inline,
+            $.verbatim_close,
+        )),
+        unclosed_verbatim: ($) => seq(
+            $.verbatim_open,
+            $._verbatim_inline,
+        ),
+
+        desc: ($) => prec.right(seq(
+            "[",
+            $._inline,
+            "]",
+        )),
+        unclosed_desc: ($) => prec.right(seq(
+            "[",
+            $._inline,
+        )),
+        target: ($) => prec.right(seq(
+            "{",
+            $._verbatim_inline,
+            "}",
+        )),
+        unclosed_target: ($) => prec.right(seq(
+            "{",
+            $._verbatim_inline,
+        )),
+        link: ($) => prec.right(seq($.target, $.desc)),
+        unclosed_link: ($) => choice(
+            $.unclosed_target,
+            seq($.target, $.unclosed_desc),
+        ),
+        anchor: ($) => prec.right(seq($.desc, $.target)),
+        unclosed_anchor: ($) => choice(
+            $.unclosed_desc,
+            seq($.desc, $.unclosed_target),
+        ),
+
+        identifier: (_) => token(prec(1, repeat1(choice(
+            /[^\)\n\r\p{Z}]/u,
+            token(seq("\\", choice(/./, newline))),
+        )))),
+        inline_attributes: ($) => seq(
+            $._unclosed_inline_attributes,
+            ")",
+        ),
+        unclosed_inline_attributes: ($) => $._unclosed_inline_attributes,
+        _unclosed_inline_attributes: ($) => prec.right(1, seq(
+            seq("(", optional(whitespace_or_newline)),
+            optional(seq(
+                field("key", $.identifier),
+                optional(seq(
+                    whitespace_or_newline,
+                    optional(field("value", alias($._verbatim_inline, $.value))),
+                )),
+            )),
+        )),
+
+        // prefixs:
+        // * heading
+        // = table
+        // - unordered list item
+        // ~ ordered list item
+        // > quote item
+        // @ranged
+        // .infirm
+        // #carryover
+
+        inline_macro: ($) => seq(
+            "\\",
+            alias(/[\p{L}\p{N}][\p{L}\p{N}\-]*/, $.identifier),
+        ),
+        // unclosed_inline_macro: ($) => choice(
+        // ),
+
+        verbatim_line: (_) => seq(/[^\n\r]*/u, newline_or_eof),
+        ranged_tag: ($) => seq(
+            $.ranged_open, field("name", $.word), newline,
+            repeat(seq(optional($._preceding_verbatim_whitespace), $.verbatim_line)),
+            optional($._preceding_verbatim_whitespace),
+            $.ranged_close,
+        ),
     },
 });
