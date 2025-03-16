@@ -28,7 +28,6 @@ module.exports = grammar({
     // Tell treesitter we want to handle whitespace ourselves
     extras: (_) => [],
     externals: ($) => [
-        $._preceding_whitespace,
         $._preceding_verbatim_whitespace,
 
         $._blank_line,
@@ -119,14 +118,30 @@ module.exports = grammar({
             )),
             token(prec(1, newline_or_eof)),
         ),
-        paragraph: ($) => seq(optional($._preceding_whitespace), $._inline),
+        // unordered_list: ($) => repeat1(
+        //     $.unordered_list_item,
+        // ),
+        // unordered_list_item: ($) => seq(
+        //     $.unordered_ndm,
+        //     repeat($.null_ndm),
+        // ),
+        // unordered_ndm: ($) => seq(
+        //     $.unordered_list_prefix,
+        //     $.paragraph,
+        // ),
+        //
+        // null_ndm: ($) => seq(
+        //     $.null_list_prefix,
+        //     $.paragraph,
+        // ),
+
+        paragraph: ($) => prec(1, seq(optional(whitespace), $._inline)),
         _inline: ($) => choice(
             prec.right(seq(
                 choice(
                     seq($.word, optional($.not_open)),
                     seq($.whitespace, optional($.not_close)),
                     seq($.soft_break, optional($.not_close)),
-                    seq($.soft_break, $._preceding_whitespace),
                     seq($.hard_break, optional($.not_close)),
                     $.escape_sequence,
                     $.punctuation,
@@ -170,7 +185,10 @@ module.exports = grammar({
 
         word: (_) => word,
         whitespace: (_) => whitespace,
-        soft_break: (_) => token(seq(optional(whitespace), newline)),
+        soft_break: (_) => prec.right(seq(
+            token(seq(optional(whitespace), newline)),
+            optional(whitespace),
+        )),
         escape_sequence: (_) => /\\[^\n\r\p{L}\p{N}]/u,
         hard_break: (_) => token(seq("\\", newline)),
         ...ATTACHED_MODIFIERS.reduce((rules, kind) => {

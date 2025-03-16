@@ -1303,6 +1303,11 @@
     }
   },
   {
+    "type": "soft_break",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "strikethrough",
     "named": true,
     "fields": {},
@@ -2558,10 +2563,6 @@
   },
   {
     "type": "ranged_open",
-    "named": true
-  },
-  {
-    "type": "soft_break",
     "named": true
   },
   {

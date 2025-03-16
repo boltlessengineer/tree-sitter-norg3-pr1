@@ -1,0 +1,58 @@
+================================================================================
+ranged-tag-00: hard test
+================================================================================
+@code
+text
+@end
+
+@code
+  text
+@end
+
+  @code
+  text
+  @end
+
+  @code
+text
+@end
+
+  @code
+    text
+       @end
+
+  @code
+    text
+  @end
+--------------------------------------------------------------------------------
+(document
+  (ranged_tag
+    (ranged_open)
+    (word)
+    (verbatim_line)
+    (ranged_close))
+  (ranged_tag
+    (ranged_open)
+    (word)
+    (verbatim_line)
+    (ranged_close))
+  (ranged_tag
+    (ranged_open)
+    (word)
+    (verbatim_line)
+    (ranged_close))
+  (ranged_tag
+    (ranged_open)
+    (word)
+    (verbatim_line)
+    (ranged_close))
+  (ranged_tag
+    (ranged_open)
+    (word)
+    (verbatim_line)
+    (ranged_close))
+  (ranged_tag
+    (ranged_open)
+    (word)
+    (verbatim_line)
+    (ranged_close)))

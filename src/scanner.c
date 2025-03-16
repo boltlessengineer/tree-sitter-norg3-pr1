@@ -151,7 +151,6 @@ struct Scanner {
 
 typedef enum token_type token_type;
 enum token_type {
-    PRECEDING_WHITESPACE,
     PRECEDING_VERBATIM_WHITESPACE,
 
     BLANK_LINE,
@@ -222,7 +221,7 @@ static token_type char_to_attached_mod(int32_t c) {
         case '`':
             return VERBATIM_OPEN;
     }
-    return PRECEDING_WHITESPACE;
+    return ERROR_MODE;
 }
 
 static token_type char_to_detached_mod(int32_t c) {
@@ -234,7 +233,7 @@ static token_type char_to_detached_mod(int32_t c) {
         case '~':
             return ORDERED_LIST;
     }
-    return PRECEDING_WHITESPACE;
+    return ERROR_MODE;
 }
 
 typedef enum scan_action scan_action;
@@ -301,7 +300,7 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
                     && (lex_next == 'e' && (lex_advance(), true))
                     && (lex_next == 'n' && (lex_advance(), true))
                     && (lex_next == 'd' && (lex_advance(), true))
-                    && is_newline(lex_next)
+                    && (is_newline(lex_next) || lex_eof)
                 ) {
                     lex_advance();
                     lex_mark_end();
@@ -324,25 +323,16 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
     if (iswspace(lex_next)) lex_skip();
     else lex_advance();
 
-    // if (valid_symbols[BLANK_LINE] && start_column == 0 && is_newline(character)) {
-    //     lex_mark_end();
-    //     lex_set_result(BLANK_LINE);
-    //     return true;
-    // }
-
-    // line start with whitespace
-    // possible tokens:
     // 1. VERBATIM_WHITESPACE  (`    `)
     // 2. RANGED_CLOSE         (`    @end`)
-    // 3. RANGED_OPEN          (`    @`)
-    // 4. BLANK_LINE           (`    \n`)
-    // 5. PRECEDING_WHITESPACE (`    `)
-    // 6. HEADING              (`    *    `)
-    // 7. DEDENT               (``)
     //
-    // possible states:
-    // 1. RANGED_CLOSE | VERBATIM_WHITESPACE
-    // 2. ETC
+    // line start with whitespace
+    // possible tokens:
+    // 1. BLANK_LINE           (`    \n`)
+    // 2. RANGED_OPEN          (`    @`)
+    // 3. HEADING              (`    *    `)
+    // 4. DEDENT               (``)
+
     if (start_column == 0 && is_whitespace(character)) {
         while (is_whitespace(lex_next))
             lex_skip();
@@ -352,12 +342,8 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
             lex_set_result(BLANK_LINE);
             return true;
         }
-        // LOG("mark end\n");
-        // lex_mark_end();
+
         LOG("checking prefix\n");
-        if (is_word(lex_next)) {
-            lex_mark_end();
-        } else {
             // shadow `character` to match function signature
             const int32_t character = lex_next;
             lex_advance();
@@ -385,33 +371,9 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
                 }
                 // SKIP
             } else if (
-                valid_symbols[RANGED_CLOSE]
-                && self->range_repeat > 0
-                && character == '@'
-            ) {
-                size_t count = 1;
-                while (lex_next == character) {
-                    lex_advance();
-                    count++;
-                }
-                if (
-                    count == self->range_repeat
-                    && (lex_next == 'e' && (lex_advance(), true))
-                    && (lex_next == 'n' && (lex_advance(), true))
-                    && (lex_next == 'd' && (lex_advance(), true))
-                    && is_newline(lex_next)
-                ) {
-                    lex_advance();
-                    lex_mark_end();
-                    lex_set_result(RANGED_CLOSE);
-                    self->range_column = 0;
-                    self->range_repeat = 0;
-                    return true;
-                }
-                return false;
-            } else if (
                 valid_symbols[RANGED_OPEN]
                 && character == '@'
+                && (lex_next == '@' || !iswspace(lex_next))
             ) {
                 size_t count = 1;
                 while (lex_next == character) {
@@ -443,21 +405,9 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
                 lex_set_result(CARRYOVER_TAG_PREFIX);
                 return true;
             }
-        }
-        // fallback to preceding whitespace
-        if (valid_symbols[PRECEDING_WHITESPACE]) {
-            lex_set_result(PRECEDING_WHITESPACE);
-            return true;
-        }
+
         return false;
-        // lookahead for
-        // ~ blank_line (_, \n)
-        // ~ heading    (_, *, _)
-        //              (_, *, *)
-        // ~ macro      (_, @, w)
-        // ~ whitespace (_)
     } else if (start_column == 0) {
-        // LOG("start column is 0 and first character
         if (valid_symbols[BLANK_LINE] && is_newline(character)) {
             lex_mark_end();
             lex_set_result(BLANK_LINE);
@@ -486,32 +436,6 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
                     return true;
                 }
                 // SKIP
-            } else if (
-                valid_symbols[RANGED_CLOSE]
-                && self->range_repeat > 0
-                && character == '@'
-                && (lex_next == '@' || lex_next == 'e')
-            ) {
-                size_t count = 1;
-                while (lex_next == character) {
-                    lex_advance();
-                    count++;
-                }
-                if (
-                    count == self->range_repeat
-                    && (lex_next == 'e' && (lex_advance(), true))
-                    && (lex_next == 'n' && (lex_advance(), true))
-                    && (lex_next == 'd' && (lex_advance(), true))
-                    && is_newline(lex_next)
-                ) {
-                    lex_advance();
-                    lex_mark_end();
-                    lex_set_result(RANGED_CLOSE);
-                    self->range_column = 0;
-                    self->range_repeat = 0;
-                    return true;
-                }
-                return false;
             } else if (
                 valid_symbols[RANGED_OPEN]
                 && character == '@'
@@ -547,84 +471,8 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
                 lex_set_result(CARRYOVER_TAG_PREFIX);
                 return true;
             }
-    }
 
-    // if (start_column == 0) {
-    //     if (is_whitespace(character)) {
-    //         lex_set_result(BLANK_LINE);
-    //         while (is_whitespace(lex_next))
-    //             lex_advance();
-    //         if (is_newline(lex_next)) {
-    //             lex_advance();
-    //             lex_set_result(BLANK_LINE);
-    //             lex_mark_end();
-    //             return true;
-    //         }
-    //
-    //         // TODO: try parse prefix
-    //
-    //         lex_mark_end();
-    //         return true;
-    //     } else {
-    //         // scan detached modifier prefix scan
-    //         if (valid_symbols[HEADING] && character == '*' && (lex_next == '*' || iswspace(lex_next))) {
-    //             size_t count = 1;
-    //             // TODO: allow whitespace between prefixes
-    //             while (lex_next == character) {
-    //                 lex_advance();
-    //                 count++;
-    //             }
-    //             if (!iswspace(lex_next))
-    //                 return false;
-    //             if (valid_symbols[DEDENT] && count <= vec_u32_back_or(&self->indent_heading, 0)) {
-    //                 vec_u32_pop(&self->indent_heading);
-    //                 lex_set_result(DEDENT);
-    //                 return true;
-    //             }
-    //             vec_u32_push(&self->indent_heading, count);
-    //             lex_mark_end();
-    //             lex_set_result(HEADING);
-    //             return true;
-    //         } else if (valid_symbols[RANGED_CLOSE] && self->range_repeat > 0 && character == '@') {
-    //             size_t count = 1;
-    //             while (lex_next == character) {
-    //                 lex_advance();
-    //                 count++;
-    //             }
-    //             if (count != self->range_repeat)
-    //                 return false;
-    //             if (
-    //                 (lex_next == 'e' && (lex_advance(), true))
-    //                 && (lex_next == 'n' && (lex_advance(), true))
-    //                 && (lex_next == 'd' && (lex_advance(), true))
-    //             ) {
-    //                 if (is_newline(lex_next)) {
-    //                     lex_advance();
-    //                     lex_mark_end();
-    //                     lex_set_result(RANGED_CLOSE);
-    //                     self->range_column = 0;
-    //                     self->range_repeat = 0;
-    //                     return true;
-    //                 }
-    //             }
-    //             return false;
-    //         } else if (valid_symbols[RANGED_OPEN] && character == '@') {
-    //             size_t count = 1;
-    //             while (lex_next == character) {
-    //                 lex_advance();
-    //                 count++;
-    //             }
-    //             if (iswspace(lex_next)) {
-    //                 return false;
-    //             }
-    //             lex_mark_end();
-    //             lex_set_result(RANGED_OPEN);
-    //             self->range_column = lex_column;
-    //             self->range_repeat = count;
-    //             return true;
-    //         }
-    //     }
-    // }
+    }
 
     // scan attached modifier
     const token_type kind_token = char_to_attached_mod(character);
