@@ -10,8 +10,7 @@ word
     (whitespace)
     (word)
     (soft_break)
-    (word)
-    (paragraph_break)))
+    (word)))
 
 ================================================================================
 para-01: Paragraph including preceding whitespaces
@@ -28,8 +27,7 @@ para-01: Paragraph including preceding whitespaces
     (soft_break)
     (word)
     (soft_break)
-    (word)
-    (paragraph_break)))
+    (word)))
 
 ================================================================================
 para-02: Soft break with whitespaces
@@ -42,10 +40,8 @@ word
     (word)
     (whitespace)
     (word)
-    (whitespace)
     (soft_break)
-    (word)
-    (paragraph_break)))
+    (word)))
 
 ================================================================================
 para-03: Paragraph break by multiple newlines
@@ -65,13 +61,12 @@ word
     (word)
     (soft_break)
     (word)
-    (paragraph_break))
+    (soft_break))
   (paragraph
     (word)
-    (paragraph_break))
+    (soft_break))
   (paragraph
-    (word)
-    (paragraph_break)))
+    (word)))
 
 ================================================================================
 para-04: Paragraph break by multiple newlines with whitespaces
@@ -88,10 +83,9 @@ word
     (word)
     (soft_break)
     (word)
-    (paragraph_break))
+    (soft_break))
   (paragraph
-    (word)
-    (paragraph_break)))
+    (word)))
 
 ================================================================================
 para-05: Paragraph break by multiple newlines in standard Attached modifier
@@ -104,14 +98,13 @@ word*
   (paragraph
     (word)
     (whitespace)
-    (open_conflict
+    (unclosed_bold
       (bold_open)
-      (word))
-    (paragraph_break))
+      (word)
+      (soft_break)))
   (paragraph
     (word)
-    (punctuation)
-    (paragraph_break)))
+    (punctuation)))
 
 ================================================================================
 para-06: Paragraph break by Structural Detached modifier
@@ -124,12 +117,12 @@ word word
     (word)
     (whitespace)
     (word)
-    (paragraph_break))
-  (heading
-    (heading_prefix)
-    (paragraph
-      (word)
-      (paragraph_break))))
+    (soft_break))
+  (section
+    (heading
+      (heading_prefix)
+      (paragraph
+        (word)))))
 
 ================================================================================
 para-07: Paragraph break by Detached modifier in standard Attached modifier
@@ -139,16 +132,16 @@ para-07: Paragraph break by Detached modifier in standard Attached modifier
 --------------------------------------------------------------------------------
 (document
   (paragraph
-    (open_conflict
+    (unclosed_bold
       (bold_open)
-      (word))
-    (paragraph_break))
-  (heading
-    (heading_prefix)
-    (paragraph
       (word)
-      (punctuation)
-      (paragraph_break))))
+      (soft_break)))
+  (section
+    (heading
+      (heading_prefix)
+      (paragraph
+        (word)
+        (punctuation)))))
 
 ================================================================================
 para-08: Paragraph break by Detached modifier in verbatim Attached modifier
@@ -158,16 +151,16 @@ para-08: Paragraph break by Detached modifier in verbatim Attached modifier
 --------------------------------------------------------------------------------
 (document
   (paragraph
-    (open_conflict
+    (unclosed_verbatim
       (verbatim_open)
-      (word))
-    (paragraph_break))
-  (heading
-    (heading_prefix)
-    (paragraph
       (word)
-      (punctuation)
-      (paragraph_break))))
+      (soft_break)))
+  (section
+    (heading
+      (heading_prefix)
+      (paragraph
+        (word)
+        (punctuation)))))
 
 ================================================================================
 para-09: Paragraph break by Nestable Detached modifier
@@ -180,61 +173,22 @@ word word
     (word)
     (whitespace)
     (word)
-    (paragraph_break))
+    (soft_break))
   (unordered_list
     (unordered_list_item
       (unordered_list_prefix)
       (paragraph
       (word)
-      (paragraph_break)))))
+      (soft_break)))))
 
 ================================================================================
-para-10: Paragraph break by Range-able Detached modifier (single prefix)
+para-10: Paragraph not break by non detached modifier
 ================================================================================
 word word
-^ word
-word
---------------------------------------------------------------------------------
-(document
-  (paragraph
-    (word)
-    (whitespace)
-    (word)
-    (paragraph_break))
-  (footnote
-    (verbatim_param_list)
-    (paragraph
-      (word)
-      (paragraph_break))))
-
-================================================================================
-para-11: Paragraph break by Range-able Detached modifier (double prefix)
-================================================================================
-word word
-^^ word
-word
-^^
---------------------------------------------------------------------------------
-(document
-  (paragraph
-    (word)
-    (whitespace)
-    (word)
-    (paragraph_break))
-  (footnote
-    (verbatim_param_list)
-    (paragraph
-      (word)
-      (paragraph_break))))
-
-================================================================================
-para-12: Paragraph not break by non detached modifier
-================================================================================
-word word
-^word
+~word
 
 word word
-^^^^^^
+~~~~~~
 --------------------------------------------------------------------------------
 (document
   (paragraph
@@ -242,21 +196,15 @@ word word
     (whitespace)
     (word)
     (soft_break)
-    (open_conflict
-      (superscript_open)
-      (word))
-    (paragraph_break))
+    (unclosed_strikethrough
+      (strikethrough_open)
+      (word)
+      (soft_break)))
   (paragraph
     (word)
     (whitespace)
     (word)
     (soft_break)
-    (punctuation)
-    (punctuation)
-    (punctuation)
-    (punctuation)
-    (punctuation)
-    (punctuation)
-    (paragraph_break)))
+    (punctuation)))
 
 ; vim:ts=2:sw=2:

@@ -22,13 +22,6 @@ const ATTACHED_MODIFIERS = [
     // "subscript",
 ];
 
-/**
- * @param {RuleOrLiteral} rule
- */
-function repeat2(rule) {
-    return seq(rule, rule, repeat(rule));
-}
-
 module.exports = grammar({
     name: "norg",
 
@@ -78,6 +71,8 @@ module.exports = grammar({
         $._dedent_heading,
         $._dedent_list,
 
+        $.infirm_tag_prefix,
+        $.carryover_tag_prefix,
         $.ranged_open,
         $.ranged_close,
 
@@ -104,10 +99,12 @@ module.exports = grammar({
         WORD: (_) => word,
 
         block: ($) => choice(
-            $.paragraph,
-            $.section,
-            $.ranged_tag,
             $._blank_line,
+            $.paragraph,
+            $.carryover_tag,
+            $.infirm_tag,
+            $.ranged_tag,
+            $.section,
         ),
         section: ($) => prec.right(seq(
             $.heading,
@@ -120,7 +117,7 @@ module.exports = grammar({
                 whitespace,
                 optional($.paragraph),
             )),
-            token(prec(1, newline)),
+            token(prec(1, newline_or_eof)),
         ),
         paragraph: ($) => seq(optional($._preceding_whitespace), $._inline),
         _inline: ($) => choice(
@@ -173,7 +170,7 @@ module.exports = grammar({
 
         word: (_) => word,
         whitespace: (_) => whitespace,
-        soft_break: (_) => newline,
+        soft_break: (_) => token(seq(optional(whitespace), newline)),
         escape_sequence: (_) => /\\[^\n\r\p{L}\p{N}]/,
         hard_break: (_) => token(seq("\\", newline)),
         ...ATTACHED_MODIFIERS.reduce((rules, kind) => {
@@ -278,6 +275,16 @@ module.exports = grammar({
             repeat(seq(optional($._preceding_verbatim_whitespace), $.verbatim_line)),
             optional($._preceding_verbatim_whitespace),
             $.ranged_close,
+        ),
+        infirm_tag: ($) => seq(
+            $.infirm_tag_prefix,
+            $._verbatim_inline,
+            token(prec(1, newline_or_eof)),
+        ),
+        carryover_tag: ($) => seq(
+            $.carryover_tag_prefix,
+            $._verbatim_inline,
+            token(prec(1, newline_or_eof)),
         ),
     },
 });

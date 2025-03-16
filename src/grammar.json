@@ -1,4 +1,5 @@
 {
+  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/grammar.schema.json",
   "name": "norg",
   "rules": {
     "document": {
@@ -60,11 +61,19 @@
       "members": [
         {
           "type": "SYMBOL",
+          "name": "_blank_line"
+        },
+        {
+          "type": "SYMBOL",
           "name": "paragraph"
         },
         {
           "type": "SYMBOL",
-          "name": "section"
+          "name": "carryover_tag"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "infirm_tag"
         },
         {
           "type": "SYMBOL",
@@ -72,7 +81,7 @@
         },
         {
           "type": "SYMBOL",
-          "name": "_blank_line"
+          "name": "section"
         }
       ]
     },
@@ -164,6 +173,10 @@
                 {
                   "type": "STRING",
                   "value": "\r\n"
+                },
+                {
+                  "type": "STRING",
+                  "value": "\u0000"
                 }
               ]
             }
@@ -563,21 +576,42 @@
       "flags": "u"
     },
     "soft_break": {
-      "type": "CHOICE",
-      "members": [
-        {
-          "type": "STRING",
-          "value": "\n"
-        },
-        {
-          "type": "STRING",
-          "value": "\r"
-        },
-        {
-          "type": "STRING",
-          "value": "\r\n"
-        }
-      ]
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "PATTERN",
+                "value": "\\p{Zs}+",
+                "flags": "u"
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "STRING",
+                "value": "\n"
+              },
+              {
+                "type": "STRING",
+                "value": "\r"
+              },
+              {
+                "type": "STRING",
+                "value": "\r\n"
+              }
+            ]
+          }
+        ]
+      }
     },
     "escape_sequence": {
       "type": "PATTERN",
@@ -1486,6 +1520,88 @@
           "name": "ranged_close"
         }
       ]
+    },
+    "infirm_tag": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "infirm_tag_prefix"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_verbatim_inline"
+        },
+        {
+          "type": "TOKEN",
+          "content": {
+            "type": "PREC",
+            "value": 1,
+            "content": {
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "\n"
+                },
+                {
+                  "type": "STRING",
+                  "value": "\r"
+                },
+                {
+                  "type": "STRING",
+                  "value": "\r\n"
+                },
+                {
+                  "type": "STRING",
+                  "value": "\u0000"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "carryover_tag": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "carryover_tag_prefix"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_verbatim_inline"
+        },
+        {
+          "type": "TOKEN",
+          "content": {
+            "type": "PREC",
+            "value": 1,
+            "content": {
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "\n"
+                },
+                {
+                  "type": "STRING",
+                  "value": "\r"
+                },
+                {
+                  "type": "STRING",
+                  "value": "\r\n"
+                },
+                {
+                  "type": "STRING",
+                  "value": "\u0000"
+                }
+              ]
+            }
+          }
+        }
+      ]
     }
   },
   "extras": [],
@@ -1590,6 +1706,10 @@
     },
     {
       "type": "SYMBOL",
+      "name": "table_prefix"
+    },
+    {
+      "type": "SYMBOL",
       "name": "unordered_list_prefix"
     },
     {
@@ -1610,6 +1730,18 @@
     },
     {
       "type": "SYMBOL",
+      "name": "_dedent_list"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "infirm_tag_prefix"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "carryover_tag_prefix"
+    },
+    {
+      "type": "SYMBOL",
       "name": "ranged_open"
     },
     {
@@ -1624,5 +1756,6 @@
   "inline": [],
   "supertypes": [
     "block"
-  ]
+  ],
+  "reserved": {}
 }

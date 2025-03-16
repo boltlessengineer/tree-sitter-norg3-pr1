@@ -4,6 +4,14 @@
     "named": true,
     "subtypes": [
       {
+        "type": "carryover_tag",
+        "named": true
+      },
+      {
+        "type": "infirm_tag",
+        "named": true
+      },
+      {
         "type": "paragraph",
         "named": true
       },
@@ -168,6 +176,49 @@
     }
   },
   {
+    "type": "carryover_tag",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "carryover_tag_prefix",
+          "named": true
+        },
+        {
+          "type": "escape_sequence",
+          "named": true
+        },
+        {
+          "type": "hard_break",
+          "named": true
+        },
+        {
+          "type": "not_close",
+          "named": true
+        },
+        {
+          "type": "punctuation",
+          "named": true
+        },
+        {
+          "type": "soft_break",
+          "named": true
+        },
+        {
+          "type": "whitespace",
+          "named": true
+        },
+        {
+          "type": "word",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "desc",
     "named": true,
     "fields": {},
@@ -289,6 +340,7 @@
   {
     "type": "document",
     "named": true,
+    "root": true,
     "fields": {},
     "children": {
       "multiple": true,
@@ -845,6 +897,49 @@
     }
   },
   {
+    "type": "infirm_tag",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "escape_sequence",
+          "named": true
+        },
+        {
+          "type": "hard_break",
+          "named": true
+        },
+        {
+          "type": "infirm_tag_prefix",
+          "named": true
+        },
+        {
+          "type": "not_close",
+          "named": true
+        },
+        {
+          "type": "punctuation",
+          "named": true
+        },
+        {
+          "type": "soft_break",
+          "named": true
+        },
+        {
+          "type": "whitespace",
+          "named": true
+        },
+        {
+          "type": "word",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "inline_attributes",
     "named": true,
     "fields": {
@@ -1206,11 +1301,6 @@
         }
       ]
     }
-  },
-  {
-    "type": "soft_break",
-    "named": true,
-    "fields": {}
   },
   {
     "type": "strikethrough",
@@ -2375,11 +2465,6 @@
     "fields": {}
   },
   {
-    "type": "word",
-    "named": true,
-    "fields": {}
-  },
-  {
     "type": "\u0000",
     "named": false
   },
@@ -2424,6 +2509,10 @@
     "named": true
   },
   {
+    "type": "carryover_tag_prefix",
+    "named": true
+  },
+  {
     "type": "escape_sequence",
     "named": true
   },
@@ -2437,6 +2526,10 @@
   },
   {
     "type": "identifier",
+    "named": true
+  },
+  {
+    "type": "infirm_tag_prefix",
     "named": true
   },
   {
@@ -2468,6 +2561,10 @@
     "named": true
   },
   {
+    "type": "soft_break",
+    "named": true
+  },
+  {
     "type": "strikethrough_close",
     "named": true
   },
@@ -2489,6 +2586,10 @@
   },
   {
     "type": "verbatim_open",
+    "named": true
+  },
+  {
+    "type": "word",
     "named": true
   },
   {

@@ -193,6 +193,8 @@ enum token_type {
     DEDENT,
     DEDENT_LIST,
 
+    INFIRM_TAG_PREFIX,
+    CARRYOVER_TAG_PREFIX,
     RANGED_OPEN,
     RANGED_CLOSE,
 
@@ -234,6 +236,13 @@ token_type char_to_detached_mod(int32_t c) {
     }
     return PRECEDING_WHITESPACE;
 }
+
+typedef enum scan_action scan_action;
+enum scan_action {
+    ACCEPT,
+    FAIL,
+    SCAN_SKIP, // "SKIP" conflicts with <parser.h>
+};
 
 /**
  * Returns `true` if the character provided is neither whitespace nor punctuation
@@ -337,15 +346,18 @@ bool scan(Scanner *self, const bool *valid_symbols) {
     if (start_column == 0 && is_whitespace(character)) {
         while (is_whitespace(lex_next))
             lex_skip();
-        if (is_newline(lex_next)) {
+        if (valid_symbols[BLANK_LINE] && is_newline(lex_next)) {
             lex_advance();
+            lex_mark_end();
             lex_set_result(BLANK_LINE);
             return true;
         }
         // LOG("mark end\n");
         // lex_mark_end();
         LOG("checking prefix\n");
-        if (!is_word(lex_next)) {
+        if (is_word(lex_next)) {
+            lex_mark_end();
+        } else {
             // shadow `character` to match function signature
             const int32_t character = lex_next;
             lex_advance();
@@ -414,9 +426,23 @@ bool scan(Scanner *self, const bool *valid_symbols) {
                     return true;
                 }
                 // SKIP
+            } else if (
+                valid_symbols[INFIRM_TAG_PREFIX]
+                && character == '.'
+                && is_word(lex_next)
+            ) {
+                lex_mark_end();
+                lex_set_result(INFIRM_TAG_PREFIX);
+                return true;
+            } else if (
+                valid_symbols[CARRYOVER_TAG_PREFIX]
+                && character == '#'
+                && is_word(lex_next)
+            ) {
+                lex_mark_end();
+                lex_set_result(CARRYOVER_TAG_PREFIX);
+                return true;
             }
-        } else {
-            lex_mark_end();
         }
         // fallback to preceding whitespace
         if (valid_symbols[PRECEDING_WHITESPACE]) {
@@ -431,6 +457,13 @@ bool scan(Scanner *self, const bool *valid_symbols) {
         // ~ macro      (_, @, w)
         // ~ whitespace (_)
     } else if (start_column == 0) {
+        // LOG("start column is 0 and first character
+        if (valid_symbols[BLANK_LINE] && is_newline(character)) {
+            lex_mark_end();
+            lex_set_result(BLANK_LINE);
+            return true;
+        }
+
             if (
                 valid_symbols[HEADING]
                 && character == '*'
@@ -497,6 +530,22 @@ bool scan(Scanner *self, const bool *valid_symbols) {
                     return true;
                 }
                 // SKIP
+            } else if (
+                valid_symbols[INFIRM_TAG_PREFIX]
+                && character == '.'
+                && is_word(lex_next)
+            ) {
+                lex_mark_end();
+                lex_set_result(INFIRM_TAG_PREFIX);
+                return true;
+            } else if (
+                valid_symbols[CARRYOVER_TAG_PREFIX]
+                && character == '#'
+                && is_word(lex_next)
+            ) {
+                lex_mark_end();
+                lex_set_result(CARRYOVER_TAG_PREFIX);
+                return true;
             }
     }
 
