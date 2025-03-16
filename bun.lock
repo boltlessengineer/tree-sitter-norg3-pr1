@@ -1,0 +1,24 @@
+{
+  "lockfileVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "tree-sitter-norg-3",
+      "dependencies": {
+        "nan": "^2.18.0",
+      },
+      "devDependencies": {
+        "@types/node": "^20.9.2",
+        "tree-sitter-cli": "^0.20.8",
+      },
+    },
+  },
+  "packages": {
+    "@types/node": ["@types/node@20.17.24", "", { "dependencies": { "undici-types": "~6.19.2" } }, "sha512-d7fGCyB96w9BnWQrOsJtpyiSaBcAYYr75bnK6ZRjDbql2cGLj/3GsL5OYmLPNq76l7Gf2q4Rv9J2o6h5CrD9sA=="],
+
+    "nan": ["nan@2.22.2", "", {}, "sha512-DANghxFkS1plDdRsX0X9pm0Z6SJNN6gBdtXfanwoZ8hooC5gosGFSBGRYHUVPz1asKA/kMRqDRdHrluZ61SpBQ=="],
+
+    "tree-sitter-cli": ["tree-sitter-cli@0.20.8", "", { "bin": { "tree-sitter": "cli.js" } }, "sha512-XjTcS3wdTy/2cc/ptMLc/WRyOLECRYcMTrSWyhZnj1oGSOWbHLTklgsgRICU3cPfb0vy+oZCC33M43u6R1HSCA=="],
+
+    "undici-types": ["undici-types@6.19.8", "", {}, "sha512-ve2KP6f/JnbPBFyobGHuerC9g1FYGn/F8n1LWTwNxCEzd6IfqTwUQcNXgEtmmQ6DlRrC1hrSrBnCZPokRrDHjw=="],
+  }
+}
