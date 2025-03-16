@@ -376,6 +376,7 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
                 && (lex_next == '@' || !iswspace(lex_next))
             ) {
                 size_t count = 1;
+                uint32_t token_start_column = lex_column - 1;
                 while (lex_next == character) {
                     lex_advance();
                     count++;
@@ -383,7 +384,7 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
                 if (!iswspace(lex_next)) {
                     lex_mark_end();
                     lex_set_result(RANGED_OPEN);
-                    self->range_column = lex_column - 1;
+                    self->range_column = token_start_column;
                     self->range_repeat = count;
                     return true;
                 }
@@ -442,6 +443,7 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
                 && (lex_next == '@' || !iswspace(lex_next))
             ) {
                 size_t count = 1;
+                uint32_t token_start_column = lex_column - 1;
                 while (lex_next == character) {
                     lex_advance();
                     count++;
@@ -449,7 +451,7 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
                 if (!iswspace(lex_next)) {
                     lex_mark_end();
                     lex_set_result(RANGED_OPEN);
-                    self->range_column = lex_column;
+                    self->range_column = token_start_column;
                     self->range_repeat = count;
                     return true;
                 }
