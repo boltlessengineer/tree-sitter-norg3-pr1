@@ -201,7 +201,7 @@ enum token_type {
     ERROR_MODE,
 };
 
-token_type char_to_attached_mod(int32_t c) {
+static token_type char_to_attached_mod(int32_t c) {
     switch (c) {
         case '*':
             return BOLD_OPEN;
@@ -225,7 +225,7 @@ token_type char_to_attached_mod(int32_t c) {
     return PRECEDING_WHITESPACE;
 }
 
-token_type char_to_detached_mod(int32_t c) {
+static token_type char_to_detached_mod(int32_t c) {
     switch (c) {
         case '*':
             return HEADING;
@@ -247,7 +247,7 @@ enum scan_action {
 /**
  * Returns `true` if the character provided is neither whitespace nor punctuation
  */
-bool is_word(int32_t character) {
+static bool is_word(int32_t character) {
     // return character && !iswspace(character) && !iswpunct(character);
     // HACK: `iswpunct()` can't be used in wasm
     // TODO(boltless): rewrite this temporary solution.
@@ -256,17 +256,17 @@ bool is_word(int32_t character) {
 /**
  * Returns `true` if the character provided is either \n or \r
  */
-bool is_newline(int32_t character) {
+static bool is_newline(int32_t character) {
     return character == '\n' || character == '\r';
 }
 /**
  * Returns `true` if the character provided is a separator character (but not a newline).
  */
-bool is_whitespace(int32_t character) {
+static bool is_whitespace(int32_t character) {
     return character && iswspace(character) && !is_newline(character);
 }
 
-bool scan(Scanner *self, const bool *valid_symbols) {
+static bool scan(Scanner *self, const bool *valid_symbols) {
     // check if parser is in error-recovery mode
     const bool error_mode = valid_symbols[ERROR_MODE];
 
@@ -295,7 +295,7 @@ bool scan(Scanner *self, const bool *valid_symbols) {
                 }
                 LOG("prefix advanced\n");
                 LOG("expected count: %d\n", self->range_repeat);
-                LOG("parsed count: %d\n", count);
+                LOG("parsed count: %zu\n", count);
                 if (
                     count == self->range_repeat
                     && (lex_next == 'e' && (lex_advance(), true))

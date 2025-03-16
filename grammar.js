@@ -8,7 +8,7 @@ const whitespace_or_newline = choice(
     newline,
     seq(whitespace, newline),
 );
-const word = /[\p{L}\p{N}]+/;
+const word = /[\p{L}\p{N}]+/u;
 
 const ATTACHED_MODIFIERS = [
     "bold",
@@ -171,7 +171,7 @@ module.exports = grammar({
         word: (_) => word,
         whitespace: (_) => whitespace,
         soft_break: (_) => token(seq(optional(whitespace), newline)),
-        escape_sequence: (_) => /\\[^\n\r\p{L}\p{N}]/,
+        escape_sequence: (_) => /\\[^\n\r\p{L}\p{N}]/u,
         hard_break: (_) => token(seq("\\", newline)),
         ...ATTACHED_MODIFIERS.reduce((rules, kind) => {
             rules[kind] = (/** @type any */ $) => prec.right(seq(
@@ -264,7 +264,7 @@ module.exports = grammar({
 
         inline_macro: ($) => seq(
             "\\",
-            alias(/[\p{L}\p{N}][\p{L}\p{N}\-]*/, $.identifier),
+            alias(/[\p{L}\p{N}][\p{L}\p{N}\-]*/u, $.identifier),
         ),
         // unclosed_inline_macro: ($) => choice(
         // ),

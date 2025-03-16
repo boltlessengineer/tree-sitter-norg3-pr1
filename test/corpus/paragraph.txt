@@ -178,8 +178,7 @@ word word
     (unordered_list_item
       (unordered_list_prefix)
       (paragraph
-      (word)
-      (soft_break)))))
+      (word)))))
 
 ================================================================================
 para-10: Paragraph not break by non detached modifier

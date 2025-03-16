@@ -54,7 +54,8 @@
     },
     "WORD": {
       "type": "PATTERN",
-      "value": "[\\p{L}\\p{N}]+"
+      "value": "[\\p{L}\\p{N}]+",
+      "flags": "u"
     },
     "block": {
       "type": "CHOICE",
@@ -568,7 +569,8 @@
     },
     "word": {
       "type": "PATTERN",
-      "value": "[\\p{L}\\p{N}]+"
+      "value": "[\\p{L}\\p{N}]+",
+      "flags": "u"
     },
     "whitespace": {
       "type": "PATTERN",
@@ -615,7 +617,8 @@
     },
     "escape_sequence": {
       "type": "PATTERN",
-      "value": "\\\\[^\\n\\r\\p{L}\\p{N}]"
+      "value": "\\\\[^\\n\\r\\p{L}\\p{N}]",
+      "flags": "u"
     },
     "hard_break": {
       "type": "TOKEN",
@@ -1409,7 +1412,8 @@
           "type": "ALIAS",
           "content": {
             "type": "PATTERN",
-            "value": "[\\p{L}\\p{N}][\\p{L}\\p{N}\\-]*"
+            "value": "[\\p{L}\\p{N}][\\p{L}\\p{N}\\-]*",
+            "flags": "u"
           },
           "named": true,
           "value": "identifier"
