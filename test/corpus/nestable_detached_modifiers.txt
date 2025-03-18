@@ -1,26 +1,18 @@
 ================================================================================
 list-00: hard test
 ================================================================================
---- list
-%%%% |example
-     - list
-     -- list
-     - list
-     ----- list
-     -- list
-     %%% |example
-         ------ list
-         - list
-         |end
-     %%% |example
-         ===
-         ---
-         |end
-     %%% para-
-         graph
-     -- list
-     |end
---- list
+- asdf
+/ asdf
+- asdf
+-- asdf
+-- asdf
+/ asdf
+- asdf
+
+-- adsf
+-- adsf
+
+- adsf
 --------------------------------------------------------------------------------
 (document
   (unordered_list
@@ -28,108 +20,52 @@ list-00: hard test
       (unordered_list_prefix)
       (paragraph
         (word)
-        (paragraph_break))
-      (null_list
-        (null_list_item
-          (null_list_prefix)
-          (standard_ranged_tag
-            (std_ranged_tag_prefix)
-            (identifier)
-            (unordered_list
-              (unordered_list_item
-                (unordered_list_prefix)
-                (paragraph
-                  (word)
-                  (paragraph_break))
-                (unordered_list
-                  (unordered_list_item
-                    (unordered_list_prefix)
-                    (paragraph
-                      (word)
-                      (paragraph_break)))))
-              (unordered_list_item
-                (unordered_list_prefix)
-                (paragraph
-                  (word)
-                  (paragraph_break))
-                (unordered_list
-                  (unordered_list_item
-                    (unordered_list_prefix)
-                    (paragraph
-                      (word)
-                      (paragraph_break)))
-                  (unordered_list_item
-                    (unordered_list_prefix)
-                    (paragraph
-                      (word)
-                      (paragraph_break))
-                    (null_list
-                      (null_list_item
-                        (null_list_prefix)
-                        (standard_ranged_tag
-                          (std_ranged_tag_prefix)
-                          (identifier)
-                          (unordered_list
-                            (unordered_list_item
-                              (unordered_list_prefix)
-                              (paragraph
-                                (word)
-                                (paragraph_break)))
-                            (unordered_list_item
-                              (unordered_list_prefix)
-                              (paragraph
-                                (word)
-                                (paragraph_break))))))
-                      (null_list_item
-                        (null_list_prefix)
-                        (standard_ranged_tag
-                          (std_ranged_tag_prefix)
-                          (identifier)
-                          (strong_delimiting_modifier)
-                          (weak_delimiting_modifier)))
-                      (null_list_item
-                        (null_list_prefix)
-                        (paragraph
-                          (word)
-                          (punctuation)
-                          (soft_break)
-                          (word)
-                          (paragraph_break)))))
-                  (unordered_list_item
-                    (unordered_list_prefix)
-                    (paragraph
-                      (word)
-                      (paragraph_break))))))))))
+        (soft_break))
+      (null_list_prefix)
+      (paragraph
+        (word)
+        (soft_break)))
     (unordered_list_item
       (unordered_list_prefix)
       (paragraph
         (word)
-        (paragraph_break)))))
-
-================================================================================
-list-01: dedent level with heading
-================================================================================
-* heading
-> paragraph
-* heading
---------------------------------------------------------------------------------
-(document
-  (heading
-    (heading_prefix)
-    title: (paragraph
-      (word)
-      (paragraph_break))
-    (quote_list
-      (quote_list_item
-        (quote_list_prefix)
-        (paragraph
-          (word)
-          (paragraph_break)))))
-  (heading
-    (heading_prefix)
-    title: (paragraph
-      (word)
-      (paragraph_break))))
+        (soft_break))
+      (unordered_list
+        (unordered_list_item
+          (unordered_list_prefix)
+          (paragraph
+            (word)
+            (soft_break)))
+        (unordered_list_item
+          (unordered_list_prefix)
+          (paragraph
+            (word)
+            (soft_break))))
+      (null_list_prefix)
+      (paragraph
+        (word)
+        (soft_break)))
+    (unordered_list_item
+      (unordered_list_prefix)
+      (paragraph
+        (word)
+        (soft_break))))
+  (unordered_list
+    (unordered_list_item
+      (unordered_list_prefix)
+      (paragraph
+        (word)
+        (soft_break)))
+    (unordered_list_item
+      (unordered_list_prefix)
+      (paragraph
+        (word)
+        (soft_break))))
+  (unordered_list
+    (unordered_list_item
+      (unordered_list_prefix)
+      (paragraph
+        (word)))))
 
 ; TODO: add more tests
 

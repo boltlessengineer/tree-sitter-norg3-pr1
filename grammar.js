@@ -14,7 +14,7 @@ const ATTACHED_MODIFIERS = [
     "bold",
     "italic",
     "underline",
-    "strikethrough",
+    // "strikethrough",
 
     // "inline_comment",
     // "spoiler",
@@ -68,7 +68,9 @@ module.exports = grammar({
         $.null_list_prefix,
 
         $._dedent_heading,
+        $._indent_list,
         $._dedent_list,
+        $._indented_line_start,
 
         $.infirm_tag_prefix,
         $.carryover_tag_prefix,
@@ -86,10 +88,15 @@ module.exports = grammar({
 
     supertypes: ($) => [
         $.block,
+        $.tag,
     ],
 
     rules: {
-        document: ($) => repeat($.block),
+        document: ($) => repeat(choice(
+            $.block,
+            $.section,
+            $._indented_block,
+        )),
 
         // NOTE: for debugging
         WS: (_) => whitespace,
@@ -100,14 +107,23 @@ module.exports = grammar({
         block: ($) => choice(
             $._blank_line,
             $.paragraph,
+            $.tag,
+            $.unordered_list,
+            $.ordered_list,
+            $.quote,
+        ),
+        tag: ($) => choice(
             $.carryover_tag,
             $.infirm_tag,
             $.ranged_tag,
-            $.section,
         ),
         section: ($) => prec.right(seq(
             $.heading,
-            repeat($.block),
+            repeat(choice(
+                $.block,
+                $.section,
+                $._indented_block,
+            )),
             optional($._dedent_heading),
         )),
         heading: ($) => seq(
@@ -118,23 +134,65 @@ module.exports = grammar({
             )),
             token(prec(1, newline_or_eof)),
         ),
-        // unordered_list: ($) => repeat1(
-        //     $.unordered_list_item,
-        // ),
-        // unordered_list_item: ($) => seq(
-        //     $.unordered_ndm,
-        //     repeat($.null_ndm),
-        // ),
-        // unordered_ndm: ($) => seq(
-        //     $.unordered_list_prefix,
-        //     $.paragraph,
-        // ),
-        //
-        // null_ndm: ($) => seq(
-        //     $.null_list_prefix,
-        //     $.paragraph,
-        // ),
+        unordered_list: ($) => prec.right(seq(
+            $._indent_list,
+            repeat1($.unordered_list_item),
+            optional($._dedent_list),
+        )),
+        unordered_list_item: ($) => prec.right(seq(
+            $.unordered_list_prefix,
+            whitespace,
+            choice($.block, $._indented_line_start),
+            repeat(choice(
+                $._indented_block,
+                $.unordered_list,
+                $.ordered_list,
+                $.quote,
+            )),
+        )),
+        ordered_list: ($) => prec.right(seq(
+            $._indent_list,
+            repeat1($.ordered_list_item),
+            optional($._dedent_list),
+        )),
+        ordered_list_item: ($) => prec.right(seq(
+            $.ordered_list_prefix,
+            whitespace,
+            choice($.block, $._indented_line_start),
+            repeat(choice(
+                $._indented_block,
+                $.unordered_list,
+                $.ordered_list,
+                $.quote,
+            )),
+        )),
+        quote: ($) => prec.right(seq(
+            $._indent_list,
+            repeat1($.quote_item),
+            optional($._dedent_list),
+        )),
+        quote_item: ($) => prec.right(seq(
+            $.quote_list_prefix,
+            whitespace,
+            choice($.block, $._indented_line_start),
+            repeat(choice(
+                $._indented_block,
+                $.unordered_list,
+                $.ordered_list,
+                $.quote,
+            )),
+        )),
+        _indented_block: ($) => seq(
+            $.null_list_prefix,
+            whitespace,
+            choice(
+                $.block,
+                $._indented_line_start,
+            ),
+        ),
 
+        // TODO: paragraph should NOT include the preceding whitespace.
+        // rename this to $._paragraph including preceding whitespace and paragraph inside.
         paragraph: ($) => prec(1, seq(optional(whitespace), $._inline)),
         _inline: ($) => choice(
             prec.right(seq(

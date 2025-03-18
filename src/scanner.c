@@ -190,7 +190,9 @@ enum token_type {
     NULL_LIST,
 
     DEDENT,
+    INDENT_LIST,
     DEDENT_LIST,
+    INDENTED_LINE_START,
 
     INFIRM_TAG_PREFIX,
     CARRYOVER_TAG_PREFIX,
@@ -224,24 +226,36 @@ static token_type char_to_attached_mod(int32_t c) {
     return ERROR_MODE;
 }
 
-static token_type char_to_detached_mod(int32_t c) {
+static token_type char_to_indent_mod(int32_t c) {
     switch (c) {
-        case '*':
-            return HEADING;
         case '-':
             return UNORDERED_LIST;
         case '~':
             return ORDERED_LIST;
+        case '>':
+            return QUOTE_LIST;
+        case '/':
+            return NULL_LIST;
     }
-    return ERROR_MODE;
+    return 0;
 }
 
 typedef enum scan_action scan_action;
 enum scan_action {
-    ACCEPT,
-    FAIL,
-    SCAN_SKIP, // "SKIP" conflicts with <parser.h>
+    ACCEPT, // 0
+    FAIL, // 1
+    SCAN_SKIP, // 2 "SKIP" conflicts with <parser.h>
 };
+
+#define TRY_SCAN(action) \
+    switch (action) {\
+        case ACCEPT:\
+            return true;\
+        case FAIL:\
+            return false;\
+        case SCAN_SKIP:\
+            break;\
+    }
 
 /**
  * Returns `true` if the character provided is neither whitespace nor punctuation
@@ -263,6 +277,113 @@ static bool is_newline(int32_t character) {
  */
 static bool is_whitespace(int32_t character) {
     return character && iswspace(character) && !is_newline(character);
+}
+
+// possible result:
+// - HEADING
+// - INDENT_LIST
+// - *_LIST_PREFIX
+// - RANGED_OPEN
+// - *_TAG_PREFIX
+static scan_action scan_prefix(Scanner *self, const bool *valid_symbols, const int32_t character) {
+    if (
+        valid_symbols[HEADING]
+        && character == '*'
+        && (lex_next == '*' || iswspace(lex_next))
+    ) {
+        size_t count = 1;
+        while (lex_next == character) {
+            lex_advance();
+            count++;
+        }
+        if (iswspace(lex_next)) {
+            if (valid_symbols[DEDENT] && count <= vec_u32_back_or(&self->indent_heading, 0)) {
+                vec_u32_pop(&self->indent_heading);
+                lex_set_result(DEDENT);
+                return ACCEPT;
+            }
+            vec_u32_push(&self->indent_heading, count);
+            if (!valid_symbols[DEDENT_LIST]) lex_mark_end();
+            lex_set_result(HEADING);
+            return ACCEPT;
+        }
+        return FAIL;
+    } else if (
+        valid_symbols[RANGED_OPEN]
+        && character == '@'
+        && (lex_next == '@' || !iswspace(lex_next))
+    ) {
+        size_t count = 1;
+        uint32_t token_start_column = lex_column - 1;
+        while (lex_next == character) {
+            lex_advance();
+            count++;
+        }
+        if (!iswspace(lex_next)) {
+            if (!valid_symbols[DEDENT_LIST]) lex_mark_end();
+            lex_set_result(RANGED_OPEN);
+            self->range_column = token_start_column;
+            self->range_repeat = count;
+            return ACCEPT;
+        }
+        return SCAN_SKIP;
+    } else if (
+        valid_symbols[INFIRM_TAG_PREFIX]
+        && character == '.'
+        && is_word(lex_next)
+    ) {
+        if (!valid_symbols[DEDENT_LIST]) lex_mark_end();
+        lex_set_result(INFIRM_TAG_PREFIX);
+        return ACCEPT;
+    } else if (
+        valid_symbols[CARRYOVER_TAG_PREFIX]
+        && character == '#'
+        && is_word(lex_next)
+    ) {
+        if (!valid_symbols[DEDENT_LIST]) lex_mark_end();
+        lex_set_result(CARRYOVER_TAG_PREFIX);
+        return ACCEPT;
+    }
+    return SCAN_SKIP;
+}
+
+static scan_action scan_list(Scanner *self, const bool *valid_symbols, const int32_t character) {
+    if (
+        (character == '/' || character == '-' || character == '~' || character == '>')
+        && (lex_next == character || iswspace(lex_next))
+    ) {
+        LOG("list item\n");
+        size_t count = 1;
+        while (lex_next == character) {
+            lex_advance();
+            count++;
+        }
+        if (!iswspace(lex_next))
+            return FAIL;
+        LOG("count = %zu\n", count);
+        LOG("sef->indent_list = %d\n", vec_u32_back_or(&self->indent_list, 0));
+        LOG("check indent_list\n");
+        if (valid_symbols[INDENT_LIST] && count > vec_u32_back_or(&self->indent_list, 0)) {
+            vec_u32_push(&self->indent_list, count);
+            lex_set_result(INDENT_LIST);
+            return ACCEPT;
+        }
+        LOG("check dedent_list\n");
+        if (valid_symbols[DEDENT_LIST] && count < vec_u32_back_or(&self->indent_list, 0)) {
+            vec_u32_pop(&self->indent_list);
+            lex_set_result(DEDENT_LIST);
+            return ACCEPT;
+        }
+        const token_type prefix_token = char_to_indent_mod(character);
+        LOG("%c is valid?: %d\n", character, valid_symbols[prefix_token]);
+        if (prefix_token && valid_symbols[prefix_token]) {
+            lex_mark_end();
+            lex_set_result(prefix_token);
+            return ACCEPT;
+        }
+        return FAIL;
+    }
+    return SCAN_SKIP;
 }
 
 static bool scan(Scanner *self, const bool *valid_symbols) {
@@ -344,136 +465,43 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
         }
 
         LOG("checking prefix\n");
-            // shadow `character` to match function signature
-            const int32_t character = lex_next;
-            lex_advance();
+        // shadow `character` to match function signature
+        const int32_t character = lex_next;
+        lex_advance();
 
-            if (
-                valid_symbols[HEADING]
-                && character == '*'
-                && (lex_next == '*' || iswspace(lex_next))
-            ) {
-                size_t count = 1;
-                while (lex_next == character) {
-                    lex_advance();
-                    count++;
-                }
-                if (iswspace(lex_next)) {
-                    if (valid_symbols[DEDENT] && count <= vec_u32_back_or(&self->indent_heading, 0)) {
-                        vec_u32_pop(&self->indent_heading);
-                        lex_set_result(DEDENT);
-                        return true;
-                    }
-                    vec_u32_push(&self->indent_heading, count);
-                    lex_mark_end();
-                    lex_set_result(HEADING);
-                    return true;
-                }
-                // SKIP
-            } else if (
-                valid_symbols[RANGED_OPEN]
-                && character == '@'
-                && (lex_next == '@' || !iswspace(lex_next))
-            ) {
-                size_t count = 1;
-                uint32_t token_start_column = lex_column - 1;
-                while (lex_next == character) {
-                    lex_advance();
-                    count++;
-                }
-                if (!iswspace(lex_next)) {
-                    lex_mark_end();
-                    lex_set_result(RANGED_OPEN);
-                    self->range_column = token_start_column;
-                    self->range_repeat = count;
-                    return true;
-                }
-                // SKIP
-            } else if (
-                valid_symbols[INFIRM_TAG_PREFIX]
-                && character == '.'
-                && is_word(lex_next)
-            ) {
-                lex_mark_end();
-                lex_set_result(INFIRM_TAG_PREFIX);
-                return true;
-            } else if (
-                valid_symbols[CARRYOVER_TAG_PREFIX]
-                && character == '#'
-                && is_word(lex_next)
-            ) {
-                lex_mark_end();
-                lex_set_result(CARRYOVER_TAG_PREFIX);
-                return true;
-            }
+        TRY_SCAN(scan_prefix(self, valid_symbols, character));
 
         return false;
-    } else if (start_column == 0) {
+    } else if (start_column == 0 || valid_symbols[INDENTED_LINE_START]) {
         if (valid_symbols[BLANK_LINE] && is_newline(character)) {
+            LOG("is blank line\n");
+            if (valid_symbols[DEDENT_LIST]) {
+                lex_set_result(DEDENT_LIST);
+                vec_u32_pop(&self->indent_list);
+                return true;
+            }
             lex_mark_end();
             lex_set_result(BLANK_LINE);
             return true;
         }
 
-            if (
-                valid_symbols[HEADING]
-                && character == '*'
-                && (lex_next == '*' || iswspace(lex_next))
-            ) {
-                size_t count = 1;
-                while (lex_next == character) {
-                    lex_advance();
-                    count++;
-                }
-                if (iswspace(lex_next)) {
-                    if (valid_symbols[DEDENT] && count <= vec_u32_back_or(&self->indent_heading, 0)) {
-                        vec_u32_pop(&self->indent_heading);
-                        lex_set_result(DEDENT);
-                        return true;
-                    }
-                    vec_u32_push(&self->indent_heading, count);
-                    lex_mark_end();
-                    lex_set_result(HEADING);
+        if (valid_symbols[DEDENT_LIST]) {
+            switch (scan_prefix(self, valid_symbols, character)) {
+                case ACCEPT:
+                    lex_set_result(DEDENT_LIST);
+                    vec_u32_pop(&self->indent_list);
                     return true;
-                }
-                // SKIP
-            } else if (
-                valid_symbols[RANGED_OPEN]
-                && character == '@'
-                && (lex_next == '@' || !iswspace(lex_next))
-            ) {
-                size_t count = 1;
-                uint32_t token_start_column = lex_column - 1;
-                while (lex_next == character) {
-                    lex_advance();
-                    count++;
-                }
-                if (!iswspace(lex_next)) {
-                    lex_mark_end();
-                    lex_set_result(RANGED_OPEN);
-                    self->range_column = token_start_column;
-                    self->range_repeat = count;
-                    return true;
-                }
-                // SKIP
-            } else if (
-                valid_symbols[INFIRM_TAG_PREFIX]
-                && character == '.'
-                && is_word(lex_next)
-            ) {
-                lex_mark_end();
-                lex_set_result(INFIRM_TAG_PREFIX);
-                return true;
-            } else if (
-                valid_symbols[CARRYOVER_TAG_PREFIX]
-                && character == '#'
-                && is_word(lex_next)
-            ) {
-                lex_mark_end();
-                lex_set_result(CARRYOVER_TAG_PREFIX);
-                return true;
+                case FAIL:
+                    return false;
+                case SCAN_SKIP:
+                    break;
             }
-
+            const scan_action action = scan_list(self, valid_symbols, character);
+            TRY_SCAN(action);
+        } else {
+            TRY_SCAN(scan_prefix(self, valid_symbols, character));
+            TRY_SCAN(scan_list(self, valid_symbols, character));
+        }
     }
 
     // scan attached modifier
