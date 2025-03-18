@@ -14,7 +14,7 @@ const ATTACHED_MODIFIERS = [
     "bold",
     "italic",
     "underline",
-    // "strikethrough",
+    "strikethrough",
 
     // "inline_comment",
     // "spoiler",
@@ -72,8 +72,8 @@ module.exports = grammar({
         $._dedent_list,
         $._indented_line_start,
 
-        $.infirm_tag_prefix,
-        $.carryover_tag_prefix,
+        $._infirm_tag_prefix,
+        $._carryover_tag_prefix,
         $.ranged_open,
         $.ranged_close,
 
@@ -84,7 +84,9 @@ module.exports = grammar({
 
     precedences: () => [],
 
-    inline: (_) => [],
+    inline: ($) => [
+        $._unclosed_attributes,
+    ],
 
     supertypes: ($) => [
         $.block,
@@ -118,7 +120,7 @@ module.exports = grammar({
             $.ranged_tag,
         ),
         section: ($) => prec.right(seq(
-            $.heading,
+            field("heading", $.heading),
             repeat(choice(
                 $.block,
                 $.section,
@@ -137,7 +139,7 @@ module.exports = grammar({
         unordered_list: ($) => prec.right(seq(
             $._indent_list,
             repeat1($.unordered_list_item),
-            optional($._dedent_list),
+            $._dedent_list,
         )),
         unordered_list_item: ($) => prec.right(seq(
             $.unordered_list_prefix,
@@ -194,6 +196,24 @@ module.exports = grammar({
         // TODO: paragraph should NOT include the preceding whitespace.
         // rename this to $._paragraph including preceding whitespace and paragraph inside.
         paragraph: ($) => prec(1, seq(optional(whitespace), $._inline)),
+        _closed_inline: ($) => seq(
+            choice(
+                seq($.word, optional($.not_open)),
+                seq($.whitespace, optional($.not_close)),
+                seq($.soft_break, optional($.not_close)),
+                seq($.hard_break, optional($.not_close)),
+                $.escape_sequence,
+                $.punctuation,
+                ...ATTACHED_MODIFIERS.map((k) => [
+                    $[k],
+                ]).flat(),
+                $.verbatim,
+                $.link,
+                $.anchor,
+                $.inline_macro,
+            ),
+            optional($._closed_inline),
+        ),
         _inline: ($) => choice(
             prec.right(seq(
                 choice(
@@ -252,9 +272,9 @@ module.exports = grammar({
         ...ATTACHED_MODIFIERS.reduce((rules, kind) => {
             rules[kind] = (/** @type any */ $) => prec.right(seq(
                 $[kind + "_open"],
-                $._inline,
+                $._closed_inline,
                 $[kind + "_close"],
-                optional($.inline_attributes),
+                optional($.attributes),
             ));
             rules["unclosed_" + kind] = (/** @type any */ $) => prec.right(seq(
                 $[kind + "_open"],
@@ -262,9 +282,9 @@ module.exports = grammar({
             ));
             rules["ext_unclosed_" + kind] = (/** @type any */ $) => prec.right(seq(
                 $[kind + "_open"],
-                $._inline,
+                $._closed_inline,
                 $[kind + "_close"],
-                $.unclosed_inline_attributes,
+                $.unclosed_attributes,
             ));
             return rules
         }, {}),
@@ -281,7 +301,7 @@ module.exports = grammar({
 
         desc: ($) => prec.right(seq(
             "[",
-            $._inline,
+            $._closed_inline,
             "]",
         )),
         unclosed_desc: ($) => prec.right(seq(
@@ -309,22 +329,34 @@ module.exports = grammar({
         ),
 
         identifier: (_) => token(prec(1, repeat1(choice(
-            /[^\)\n\r\p{Z}]/u,
+            /[^;\(\)\n\r\p{Z}]/u,
             token(seq("\\", choice(/./, newline))),
         )))),
-        inline_attributes: ($) => seq(
-            $._unclosed_inline_attributes,
+        attributes: ($) => seq(
+            $._unclosed_attributes,
             ")",
         ),
-        unclosed_inline_attributes: ($) => $._unclosed_inline_attributes,
-        _unclosed_inline_attributes: ($) => prec.right(1, seq(
-            seq("(", optional(whitespace_or_newline)),
+        unclosed_attributes: ($) => $._unclosed_attributes,
+        _unclosed_attributes: ($) => prec.right(1, seq(
+            "(",
+            repeat(choice(
+                token(prec(2, ";")),
+                whitespace_or_newline,
+            )),
             optional(seq(
-                field("key", $.identifier),
-                optional(seq(
-                    whitespace_or_newline,
-                    optional(field("value", alias($._verbatim_inline, $.value))),
+                $.kv_pair,
+                repeat(seq(
+                    token(prec(2, ";")),
+                    optional(whitespace_or_newline),
+                    optional($.kv_pair),
                 )),
+            )),
+        )),
+        kv_pair: ($) => prec.right(2, seq(
+            field("key", $.identifier),
+            optional(seq(
+                token(prec(1, whitespace_or_newline)),
+                optional(field("value", alias($._verbatim_inline, $.value))),
             )),
         )),
 
@@ -334,6 +366,7 @@ module.exports = grammar({
         // - unordered list item
         // ~ ordered list item
         // > quote item
+        // / indented block
         // @ranged
         // .infirm
         // #carryover
@@ -353,13 +386,20 @@ module.exports = grammar({
             $.ranged_close,
         ),
         infirm_tag: ($) => seq(
-            $.infirm_tag_prefix,
-            $._verbatim_inline,
+            $._infirm_tag_prefix,
+            field("name", $.identifier),
+            optional(seq(whitespace, $._verbatim_inline)),
             token(prec(1, newline_or_eof)),
         ),
         carryover_tag: ($) => seq(
-            $.carryover_tag_prefix,
-            $._verbatim_inline,
+            $._carryover_tag_prefix,
+            choice(
+                seq(
+                    field("name", $.identifier),
+                    optional(seq(whitespace, $._verbatim_inline)),
+                ),
+                $.attributes,
+            ),
             token(prec(1, newline_or_eof)),
         ),
     },

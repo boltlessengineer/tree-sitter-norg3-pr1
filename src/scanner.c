@@ -242,9 +242,10 @@ static token_type char_to_indent_mod(int32_t c) {
 
 typedef enum scan_action scan_action;
 enum scan_action {
-    ACCEPT, // 0
-    FAIL, // 1
-    SCAN_SKIP, // 2 "SKIP" conflicts with <parser.h>
+    ACCEPT,    // Confirm the token. Should return immediately
+    FAIL,      // No matching external token found. Should return immediately
+    SCAN_SKIP, // No side-effect occured. Can precede scanning.
+    // NOTE: "SKIP" conflicts with <parser.h>
 };
 
 #define TRY_SCAN(action) \
@@ -287,7 +288,7 @@ static bool is_whitespace(int32_t character) {
 // - *_TAG_PREFIX
 static scan_action scan_prefix(Scanner *self, const bool *valid_symbols, const int32_t character) {
     if (
-        valid_symbols[HEADING]
+        (valid_symbols[HEADING] || valid_symbols[DEDENT_LIST])
         && character == '*'
         && (lex_next == '*' || iswspace(lex_next))
     ) {
@@ -309,7 +310,7 @@ static scan_action scan_prefix(Scanner *self, const bool *valid_symbols, const i
         }
         return FAIL;
     } else if (
-        valid_symbols[RANGED_OPEN]
+        (valid_symbols[RANGED_OPEN] || valid_symbols[DEDENT_LIST])
         && character == '@'
         && (lex_next == '@' || !iswspace(lex_next))
     ) {
@@ -328,7 +329,7 @@ static scan_action scan_prefix(Scanner *self, const bool *valid_symbols, const i
         }
         return SCAN_SKIP;
     } else if (
-        valid_symbols[INFIRM_TAG_PREFIX]
+        (valid_symbols[INFIRM_TAG_PREFIX] || valid_symbols[DEDENT_LIST])
         && character == '.'
         && is_word(lex_next)
     ) {
@@ -336,9 +337,9 @@ static scan_action scan_prefix(Scanner *self, const bool *valid_symbols, const i
         lex_set_result(INFIRM_TAG_PREFIX);
         return ACCEPT;
     } else if (
-        valid_symbols[CARRYOVER_TAG_PREFIX]
+        (valid_symbols[CARRYOVER_TAG_PREFIX] || valid_symbols[DEDENT_LIST])
         && character == '#'
-        && is_word(lex_next)
+        && (is_word(lex_next) || lex_next == '(')
     ) {
         if (!valid_symbols[DEDENT_LIST]) lex_mark_end();
         lex_set_result(CARRYOVER_TAG_PREFIX);
@@ -350,7 +351,7 @@ static scan_action scan_prefix(Scanner *self, const bool *valid_symbols, const i
 static scan_action scan_list(Scanner *self, const bool *valid_symbols, const int32_t character) {
     if (
         (character == '/' || character == '-' || character == '~' || character == '>')
-        && (lex_next == character || iswspace(lex_next))
+        && (lex_next == character || is_whitespace(lex_next))
     ) {
         LOG("list item\n");
         size_t count = 1;
@@ -358,12 +359,16 @@ static scan_action scan_list(Scanner *self, const bool *valid_symbols, const int
             lex_advance();
             count++;
         }
-        if (!iswspace(lex_next))
+        if (!is_whitespace(lex_next))
             return FAIL;
         LOG("count = %zu\n", count);
         LOG("sef->indent_list = %d\n", vec_u32_back_or(&self->indent_list, 0));
         LOG("check indent_list\n");
-        if (valid_symbols[INDENT_LIST] && count > vec_u32_back_or(&self->indent_list, 0)) {
+        if (
+            valid_symbols[INDENT_LIST]
+            && character != '/'
+            && count > vec_u32_back_or(&self->indent_list, 0)
+        ) {
             vec_u32_push(&self->indent_list, count);
             lex_set_result(INDENT_LIST);
             return ACCEPT;
@@ -380,6 +385,10 @@ static scan_action scan_list(Scanner *self, const bool *valid_symbols, const int
             lex_mark_end();
             lex_set_result(prefix_token);
             return ACCEPT;
+        } else if (prefix_token && valid_symbols[DEDENT_LIST]) { // for "- asdf\n~ asdf"
+            vec_u32_pop(&self->indent_list);
+            lex_set_result(DEDENT_LIST);
+            return ACCEPT;
         }
         return FAIL;
     }
@@ -389,6 +398,8 @@ static scan_action scan_list(Scanner *self, const bool *valid_symbols, const int
 static bool scan(Scanner *self, const bool *valid_symbols) {
     // check if parser is in error-recovery mode
     const bool error_mode = valid_symbols[ERROR_MODE];
+    if (error_mode)
+        return false;
 
     if (
         valid_symbols[PRECEDING_VERBATIM_WHITESPACE]
@@ -444,16 +455,6 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
     if (iswspace(lex_next)) lex_skip();
     else lex_advance();
 
-    // 1. VERBATIM_WHITESPACE  (`    `)
-    // 2. RANGED_CLOSE         (`    @end`)
-    //
-    // line start with whitespace
-    // possible tokens:
-    // 1. BLANK_LINE           (`    \n`)
-    // 2. RANGED_OPEN          (`    @`)
-    // 3. HEADING              (`    *    `)
-    // 4. DEDENT               (``)
-
     if (start_column == 0 && is_whitespace(character)) {
         while (is_whitespace(lex_next))
             lex_skip();
@@ -472,24 +473,24 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
         TRY_SCAN(scan_prefix(self, valid_symbols, character));
 
         return false;
-    } else if (start_column == 0 || valid_symbols[INDENTED_LINE_START]) {
-        if (valid_symbols[BLANK_LINE] && is_newline(character)) {
-            LOG("is blank line\n");
-            if (valid_symbols[DEDENT_LIST]) {
-                lex_set_result(DEDENT_LIST);
-                vec_u32_pop(&self->indent_list);
-                return true;
-            }
+    } else if (start_column == 0 && is_newline(character)) {
+        LOG("blank line detected\n");
+        if (valid_symbols[DEDENT_LIST]) {
+            vec_u32_pop(&self->indent_list);
+            lex_set_result(DEDENT_LIST);
+            return true;
+        }
+        if (valid_symbols[BLANK_LINE]) {
             lex_mark_end();
             lex_set_result(BLANK_LINE);
             return true;
         }
-
-        if (valid_symbols[DEDENT_LIST]) {
+    } else if (start_column == 0 || valid_symbols[INDENTED_LINE_START]) {
+        if (start_column == 0 && valid_symbols[DEDENT_LIST]) {
             switch (scan_prefix(self, valid_symbols, character)) {
                 case ACCEPT:
-                    lex_set_result(DEDENT_LIST);
                     vec_u32_pop(&self->indent_list);
+                    lex_set_result(DEDENT_LIST);
                     return true;
                 case FAIL:
                     return false;
@@ -498,6 +499,7 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
             }
             const scan_action action = scan_list(self, valid_symbols, character);
             TRY_SCAN(action);
+            // TRY_SCAN(scan_list(self, valid_symbols, character));
         } else {
             TRY_SCAN(scan_prefix(self, valid_symbols, character));
             TRY_SCAN(scan_list(self, valid_symbols, character));

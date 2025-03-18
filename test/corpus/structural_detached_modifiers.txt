@@ -1,91 +1,51 @@
 ================================================================================
 heading-00: hard test
 ================================================================================
+* heading
+** heading
 *** heading
-|example
 * heading
-** heading
-* heading
-***** heading
-** heading
-|example
-****** heading
-* heading
-|end
-|example
-===
----
-|end
+
 paragraph
+
 ** heading
-|end
-*** heading
+
+** heading
 --------------------------------------------------------------------------------
 (document
-  (heading
-    (heading_prefix)
-    title: (paragraph
-      (word)
-      (paragraph_break))
-    (standard_ranged_tag
-      (std_ranged_tag_prefix)
-      (identifier)
-      (heading
+  (section
+    heading: (heading
+      (heading_prefix)
+      (paragraph
+        (word)))
+    (section
+      heading: (heading
         (heading_prefix)
-        title: (paragraph
-          (word)
-          (paragraph_break))
-        (heading
+        (paragraph
+          (word)))
+      (section
+        heading: (heading
           (heading_prefix)
-          title: (paragraph
-            (word)
-            (paragraph_break))))
-      (heading
-        (heading_prefix)
-        title: (paragraph
-          (word)
-          (paragraph_break))
-        (heading
-          (heading_prefix)
-          title: (paragraph
-            (word)
-            (paragraph_break)))
-        (heading
-          (heading_prefix)
-          title: (paragraph
-            (word)
-            (paragraph_break))
-          (standard_ranged_tag
-            (std_ranged_tag_prefix)
-            (identifier)
-            (heading
-              (heading_prefix)
-              title: (paragraph
-                (word)
-                (paragraph_break)))
-            (heading
-              (heading_prefix)
-              title: (paragraph
-                (word)
-                (paragraph_break))))
-          (standard_ranged_tag
-            (std_ranged_tag_prefix)
-            (identifier)
-            (strong_delimiting_modifier)
-            (weak_delimiting_modifier))
           (paragraph
-            (word)
-            (paragraph_break)))
-        (heading
-          (heading_prefix)
-          title: (paragraph
-            (word)
-            (paragraph_break))))))
-  (heading
-    (heading_prefix)
-    title: (paragraph
+            (word))))))
+  (section
+    heading: (heading
+      (heading_prefix)
+      (paragraph
+        (word)))
+    (paragraph
       (word)
-      (paragraph_break))))
+      (soft_break))
+    (section
+      heading: (heading
+        (heading_prefix)
+        (paragraph
+          (word))))
+    (section
+      heading: (heading
+        (heading_prefix)
+        (paragraph
+          (word))))))
 
 ; TODO: add more tests
 
