@@ -22,54 +22,6 @@
         ]
       }
     },
-    "WS": {
-      "type": "PATTERN",
-      "value": "\\p{Zs}+",
-      "flags": "u"
-    },
-    "NL": {
-      "type": "CHOICE",
-      "members": [
-        {
-          "type": "STRING",
-          "value": "\n"
-        },
-        {
-          "type": "STRING",
-          "value": "\r"
-        },
-        {
-          "type": "STRING",
-          "value": "\r\n"
-        }
-      ]
-    },
-    "NL_OR_EOF": {
-      "type": "CHOICE",
-      "members": [
-        {
-          "type": "STRING",
-          "value": "\n"
-        },
-        {
-          "type": "STRING",
-          "value": "\r"
-        },
-        {
-          "type": "STRING",
-          "value": "\r\n"
-        },
-        {
-          "type": "STRING",
-          "value": "\u0000"
-        }
-      ]
-    },
-    "WORD": {
-      "type": "PATTERN",
-      "value": "[\\p{L}\\p{N}]+",
-      "flags": "u"
-    },
     "block": {
       "type": "CHOICE",
       "members": [
@@ -880,6 +832,10 @@
         {
           "type": "SYMBOL",
           "name": "unclosed_anchor"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "unclosed_inline_macro"
         }
       ]
     },
@@ -1470,7 +1426,7 @@
         }
       ]
     },
-    "desc": {
+    "markup": {
       "type": "PREC_RIGHT",
       "value": 0,
       "content": {
@@ -1491,7 +1447,7 @@
         ]
       }
     },
-    "unclosed_desc": {
+    "unclosed_markup": {
       "type": "PREC_RIGHT",
       "value": 0,
       "content": {
@@ -1553,12 +1509,28 @@
         "type": "SEQ",
         "members": [
           {
-            "type": "SYMBOL",
-            "name": "target"
+            "type": "FIELD",
+            "name": "target",
+            "content": {
+              "type": "SYMBOL",
+              "name": "target"
+            }
           },
           {
-            "type": "SYMBOL",
-            "name": "desc"
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "FIELD",
+                "name": "desc",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "markup"
+                }
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
           }
         ]
       }
@@ -1579,7 +1551,7 @@
             },
             {
               "type": "SYMBOL",
-              "name": "unclosed_desc"
+              "name": "unclosed_markup"
             }
           ]
         }
@@ -1592,12 +1564,28 @@
         "type": "SEQ",
         "members": [
           {
-            "type": "SYMBOL",
-            "name": "desc"
+            "type": "FIELD",
+            "name": "desc",
+            "content": {
+              "type": "SYMBOL",
+              "name": "markup"
+            }
           },
           {
-            "type": "SYMBOL",
-            "name": "target"
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "FIELD",
+                "name": "target",
+                "content": {
+                  "type": "SYMBOL",
+                  "name": "target"
+                }
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
           }
         ]
       }
@@ -1607,14 +1595,14 @@
       "members": [
         {
           "type": "SYMBOL",
-          "name": "unclosed_desc"
+          "name": "unclosed_markup"
         },
         {
           "type": "SEQ",
           "members": [
             {
               "type": "SYMBOL",
-              "name": "desc"
+              "name": "markup"
             },
             {
               "type": "SYMBOL",
@@ -2008,6 +1996,53 @@
       }
     },
     "inline_macro": {
+      "type": "PREC_RIGHT",
+      "value": 0,
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "\\"
+          },
+          {
+            "type": "ALIAS",
+            "content": {
+              "type": "PATTERN",
+              "value": "[\\p{L}\\p{N}][\\p{L}\\p{N}\\-]*",
+              "flags": "u"
+            },
+            "named": true,
+            "value": "identifier"
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "markup"
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "attributes"
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "unclosed_inline_macro": {
       "type": "SEQ",
       "members": [
         {
@@ -2023,6 +2058,28 @@
           },
           "named": true,
           "value": "identifier"
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "unclosed_markup"
+            },
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "SYMBOL",
+                  "name": "markup"
+                },
+                {
+                  "type": "SYMBOL",
+                  "name": "unclosed_attributes"
+                }
+              ]
+            }
+          ]
         }
       ]
     },

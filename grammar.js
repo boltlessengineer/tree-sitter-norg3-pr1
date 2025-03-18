@@ -100,12 +100,6 @@ module.exports = grammar({
             $._indented_block,
         )),
 
-        // NOTE: for debugging
-        WS: (_) => whitespace,
-        NL: (_) => newline,
-        NL_OR_EOF: (_) => newline_or_eof,
-        WORD: (_) => word,
-
         block: ($) => choice(
             $._blank_line,
             $.paragraph,
@@ -240,6 +234,7 @@ module.exports = grammar({
             $.unclosed_verbatim,
             $.unclosed_link,
             $.unclosed_anchor,
+            $.unclosed_inline_macro,
         ),
         _verbatim_inline: ($) => prec.right(2, seq(
             choice(
@@ -299,12 +294,12 @@ module.exports = grammar({
             $._verbatim_inline,
         ),
 
-        desc: ($) => prec.right(seq(
+        markup: ($) => prec.right(seq(
             "[",
             $._closed_inline,
             "]",
         )),
-        unclosed_desc: ($) => prec.right(seq(
+        unclosed_markup: ($) => prec.right(seq(
             "[",
             $._inline,
         )),
@@ -317,15 +312,21 @@ module.exports = grammar({
             "{",
             $._verbatim_inline,
         )),
-        link: ($) => prec.right(seq($.target, $.desc)),
+        link: ($) => prec.right(seq(
+            field("target", $.target),
+            optional(field("desc", $.markup)),
+        )),
         unclosed_link: ($) => choice(
             $.unclosed_target,
-            seq($.target, $.unclosed_desc),
+            seq($.target, $.unclosed_markup),
         ),
-        anchor: ($) => prec.right(seq($.desc, $.target)),
+        anchor: ($) => prec.right(seq(
+            field("desc", $.markup),
+            optional(field("target", $.target))
+        )),
         unclosed_anchor: ($) => choice(
-            $.unclosed_desc,
-            seq($.desc, $.unclosed_target),
+            $.unclosed_markup,
+            seq($.markup, $.unclosed_target),
         ),
 
         identifier: (_) => token(prec(1, repeat1(choice(
@@ -371,12 +372,20 @@ module.exports = grammar({
         // .infirm
         // #carryover
 
-        inline_macro: ($) => seq(
+        inline_macro: ($) => prec.right(seq(
             "\\",
             alias(/[\p{L}\p{N}][\p{L}\p{N}\-]*/u, $.identifier),
+            optional($.markup),
+            optional($.attributes),
+        )),
+        unclosed_inline_macro: ($) => seq(
+            "\\",
+            alias(/[\p{L}\p{N}][\p{L}\p{N}\-]*/u, $.identifier),
+            choice(
+                $.unclosed_markup,
+                seq($.markup, $.unclosed_attributes),
+            ),
         ),
-        // unclosed_inline_macro: ($) => choice(
-        // ),
 
         verbatim_line: (_) => seq(/[^\n\r]*/u, newline_or_eof),
         ranged_tag: ($) => seq(
