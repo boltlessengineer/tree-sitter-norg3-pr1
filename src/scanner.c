@@ -401,6 +401,11 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
     if (error_mode)
         return false;
 
+    if (valid_symbols[DEDENT_LIST] && lex_eof) {
+        lex_set_result(DEDENT_LIST);
+        return true;
+    }
+
     if (
         valid_symbols[PRECEDING_VERBATIM_WHITESPACE]
         && lex_column == 0

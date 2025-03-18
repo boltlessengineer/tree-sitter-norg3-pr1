@@ -64,7 +64,7 @@ module.exports = grammar({
 
         $.unordered_list_prefix,
         $.ordered_list_prefix,
-        $.quote_list_prefix,
+        $.quote_prefix,
         $.null_list_prefix,
 
         $._dedent_heading,
@@ -126,58 +126,41 @@ module.exports = grammar({
             $.heading_prefix,
             optional(seq(
                 whitespace,
+                optional(seq(
+                    $.attributes,
+                    whitespace,
+                )),
                 optional($.paragraph),
             )),
             token(prec(1, newline_or_eof)),
         ),
-        unordered_list: ($) => prec.right(seq(
-            $._indent_list,
-            repeat1($.unordered_list_item),
-            $._dedent_list,
-        )),
-        unordered_list_item: ($) => prec.right(seq(
-            $.unordered_list_prefix,
-            whitespace,
-            choice($.block, $._indented_line_start),
-            repeat(choice(
-                $._indented_block,
-                $.unordered_list,
-                $.ordered_list,
-                $.quote,
-            )),
-        )),
-        ordered_list: ($) => prec.right(seq(
-            $._indent_list,
-            repeat1($.ordered_list_item),
-            optional($._dedent_list),
-        )),
-        ordered_list_item: ($) => prec.right(seq(
-            $.ordered_list_prefix,
-            whitespace,
-            choice($.block, $._indented_line_start),
-            repeat(choice(
-                $._indented_block,
-                $.unordered_list,
-                $.ordered_list,
-                $.quote,
-            )),
-        )),
-        quote: ($) => prec.right(seq(
-            $._indent_list,
-            repeat1($.quote_item),
-            optional($._dedent_list),
-        )),
-        quote_item: ($) => prec.right(seq(
-            $.quote_list_prefix,
-            whitespace,
-            choice($.block, $._indented_line_start),
-            repeat(choice(
-                $._indented_block,
-                $.unordered_list,
-                $.ordered_list,
-                $.quote,
-            )),
-        )),
+        ...[
+            "unordered_list",
+            "ordered_list",
+            "quote",
+        ].reduce((rules, kind) => {
+            rules[kind] = (/** @type any */ $) => prec.right(seq(
+                $._indent_list,
+                repeat1($[kind + "_item"]),
+                $._dedent_list,
+            ));
+            rules[kind + "_item"] = (/** @type any */ $) => prec.right(seq(
+                $[kind + "_prefix"],
+                whitespace,
+                optional(seq(
+                    $.attributes,
+                    whitespace,
+                )),
+                choice($.block, $._indented_line_start),
+                repeat(choice(
+                    $._indented_block,
+                    $.unordered_list,
+                    $.ordered_list,
+                    $.quote,
+                )),
+            ));
+            return rules
+        }, {}),
         _indented_block: ($) => seq(
             $.null_list_prefix,
             whitespace,
@@ -346,11 +329,11 @@ module.exports = grammar({
             )),
             optional(seq(
                 $.kv_pair,
-                repeat(seq(
+                repeat(prec.right(seq(
                     token(prec(2, ";")),
-                    optional(whitespace_or_newline),
+                    repeat(choice(whitespace, newline)),
                     optional($.kv_pair),
-                )),
+                ))),
             )),
         )),
         kv_pair: ($) => prec.right(2, seq(
@@ -398,7 +381,7 @@ module.exports = grammar({
             $._infirm_tag_prefix,
             field("name", $.identifier),
             optional(seq(whitespace, $._verbatim_inline)),
-            token(prec(1, newline_or_eof)),
+            newline_or_eof,
         ),
         carryover_tag: ($) => seq(
             $._carryover_tag_prefix,
@@ -409,7 +392,7 @@ module.exports = grammar({
                 ),
                 $.attributes,
             ),
-            token(prec(1, newline_or_eof)),
+            newline_or_eof,
         ),
     },
 });

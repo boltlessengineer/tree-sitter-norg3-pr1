@@ -6,6 +6,8 @@ list-00: hard test
 - asdf
 -- asdf
 -- asdf
+~~ asdf
+~~ asdf
 / asdf
 - asdf
 
@@ -38,6 +40,17 @@ list-00: hard test
             (soft_break)))
         (unordered_list_item
           (unordered_list_prefix)
+          (paragraph
+            (word)
+            (soft_break))))
+      (ordered_list
+        (ordered_list_item
+          (ordered_list_prefix)
+          (paragraph
+            (word)
+            (soft_break)))
+        (ordered_list_item
+          (ordered_list_prefix)
           (paragraph
             (word)
             (soft_break))))

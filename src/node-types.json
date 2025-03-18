@@ -606,6 +606,10 @@
       "required": true,
       "types": [
         {
+          "type": "attributes",
+          "named": true
+        },
+        {
           "type": "heading_prefix",
           "named": true
         },
@@ -927,6 +931,10 @@
       "required": true,
       "types": [
         {
+          "type": "attributes",
+          "named": true
+        },
+        {
           "type": "block",
           "named": true
         },
@@ -1088,6 +1096,10 @@
       "required": true,
       "types": [
         {
+          "type": "attributes",
+          "named": true
+        },
+        {
           "type": "block",
           "named": true
         },
@@ -1096,7 +1108,7 @@
           "named": true
         },
         {
-          "type": "quote_list_prefix",
+          "type": "quote_prefix",
           "named": true
         }
       ]
@@ -2213,6 +2225,10 @@
       "required": true,
       "types": [
         {
+          "type": "attributes",
+          "named": true
+        },
+        {
           "type": "block",
           "named": true
         },
@@ -2416,7 +2432,7 @@
     "named": true
   },
   {
-    "type": "quote_list_prefix",
+    "type": "quote_prefix",
     "named": true
   },
   {
