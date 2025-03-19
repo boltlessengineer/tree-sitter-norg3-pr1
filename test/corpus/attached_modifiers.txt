@@ -29,7 +29,6 @@ word.*word*
       (word)
       (bold_close))
     (soft_break))
-  (blank_line)
   (paragraph
     (word)
     (punctuation)
@@ -38,7 +37,6 @@ word.*word*
       (word)
       (bold_close))
     (soft_break))
-  (blank_line)
   (paragraph
     (bold
       (bold_open)
@@ -65,7 +63,6 @@ att-02: valid cases after open
       (word)
       (bold_close))
     (soft_break))
-  (blank_line)
   (paragraph
     (bold
       (bold_open)
@@ -109,7 +106,6 @@ word
     (whitespace)
     (word)
     (soft_break))
-  (blank_line)
   (paragraph
     (bold
       (bold_open)
@@ -118,7 +114,6 @@ word
     (punctuation)
     (word)
     (soft_break))
-  (blank_line)
   (paragraph
     (bold
       (bold_open)
@@ -142,7 +137,6 @@ word*word*
     (word)
     (punctuation)
     (soft_break))
-  (blank_line)
   (paragraph
     (punctuation)
     (word)
@@ -154,7 +148,7 @@ att-06: invalid cases after open
 ================================================================================
 )* word*
 
-*
+)*
 word*
 --------------------------------------------------------------------------------
 (document
@@ -166,8 +160,8 @@ word*
     (word)
     (punctuation)
     (soft_break))
-  (blank_line)
   (paragraph
+    (punctuation)
     (punctuation)
     (soft_break)
     (word)
@@ -181,7 +175,7 @@ att-07: invalid cases before close 1
 --------------------------------------------------------------------------------
 (document
   (paragraph
-    (open_conflict
+    (unclosed_bold
       (bold_open)
       (word)
       (whitespace)
@@ -196,7 +190,7 @@ att-08: invalid cases before close 2
 --------------------------------------------------------------------------------
 (document
   (paragraph
-    (open_conflict
+    (unclosed_bold
       (bold_open)
       (word)
       (soft_break)
@@ -210,7 +204,7 @@ att-09: invalid case after close 1
 --------------------------------------------------------------------------------
 (document
   (paragraph
-    (open_conflict
+    (unclosed_bold
       (bold_open)
       (word)
       (punctuation)
@@ -224,7 +218,7 @@ att-10: invalid case after close 2
 --------------------------------------------------------------------------------
 (document
   (paragraph
-    (open_conflict
+    (unclosed_bold
       (bold_open)
       (word)
       (punctuation))
@@ -246,7 +240,6 @@ att-11: valid case
       (word)
       (bold_close))
     (soft_break))
-  (blank_line)
   (paragraph
     (bold
       (bold_open)
@@ -273,7 +266,6 @@ att-12: don't allow same markup nested
       (word)
       (bold_close))
     (soft_break))
-  (blank_line)
   (paragraph
     (bold
       (bold_open)
@@ -290,97 +282,57 @@ att-12: don't allow same markup nested
 ================================================================================
 att-13: haard test
 ================================================================================
-word *word /word _word -word/
+word *word /word _word ~word/
 --------------------------------------------------------------------------------
 (document
   (paragraph
     (word)
     (whitespace)
-    (open_conflict
+    (unclosed_bold
       (bold_open)
       (word)
       (whitespace)
-      (italic
+      (unclosed_italic
         (italic_open)
         (word)
         (whitespace)
-        (underline_open)
-        (word)
-        (whitespace)
-        (strikethrough_open)
-        (word)
-        (italic_close))
-)))
+        (unclosed_underline
+          (underline_open)
+          (word)
+          (whitespace)
+          (unclosed_strikethrough
+            (strikethrough_open)
+            (word)
+            (punctuation)))))))
 
 ================================================================================
-att-14: various verbatim attached modifiers
+att-14: verbatim attached modifiers
 ================================================================================
 `word`
-
-$word$
-
-&word&
 --------------------------------------------------------------------------------
 (document
   (paragraph
     (verbatim
       (verbatim_open)
       (word)
-      (verbatim_close))
-    (soft_break))
-  (blank_line)
-  (paragraph
-    (math
-      (math_open)
-      (word)
-      (math_close))
-    (soft_break))
-  (blank_line)
-  (paragraph
-    (inline_macro
-      (inline_macro_open)
-      (word)
-      (inline_macro_close))
-))
+      (verbatim_close))))
 
 ================================================================================
-att-15: haard test verbatims
-================================================================================
-&$word `word $word` word&
---------------------------------------------------------------------------------
-(document
-  (paragraph
-    (inline_macro
-      (inline_macro_open)
-      (punctuation)
-      (word)
-      (whitespace)
-      (punctuation)
-      (word)
-      (whitespace)
-      (punctuation)
-      (word)
-      (punctuation)
-      (whitespace)
-      (word)
-      (inline_macro_close))
-))
-
-================================================================================
-att-16: single unclosed opener inside markup as punctuation
+att-15: single unclosed opener inside markup as punctuation
 ================================================================================
 */*
 --------------------------------------------------------------------------------
 (document
   (paragraph
-    (bold
+    (unclosed_bold
       (bold_open)
-      (italic_open)
-      (bold_close))
+      (unclosed_italic
+        (italic_open)
+        (punctuation)))
 ))
 
 ================================================================================
-att-16.1: valid markup after unclosed markup and invalid close modifier
+att-15.1: valid markup after unclosed markup and invalid close modifier
 ================================================================================
 */*word/
 
@@ -388,7 +340,7 @@ att-16.1: valid markup after unclosed markup and invalid close modifier
 --------------------------------------------------------------------------------
 (document
   (paragraph
-    (open_conflict
+    (unclosed_bold
       (bold_open)
       (italic
         (italic_open)
@@ -396,9 +348,8 @@ att-16.1: valid markup after unclosed markup and invalid close modifier
         (word)
         (italic_close))
       (soft_break)))
-  (blank_line)
   (paragraph
-    (open_conflict
+    (unclosed_bold
       (bold_open)
       (italic
         (italic_open)
@@ -407,22 +358,23 @@ att-16.1: valid markup after unclosed markup and invalid close modifier
 ))
 
 ================================================================================
-att-16.2: unclosed opening modifier before the valid close modifier
+att-15.2: unclosed opening modifier before the valid close modifier
 ================================================================================
 *word /*
 --------------------------------------------------------------------------------
 (document
   (paragraph
-    (bold
+    (unclosed_bold
       (bold_open)
       (word)
       (whitespace)
-      (italic_open)
-      (bold_close))
+      (unclosed_italic
+        (italic_open)
+        (punctuation)))
 ))
 
 ================================================================================
-att-17: prevent close modifier inside verbatim
+att-16: prevent close modifier inside verbatim
 ================================================================================
 `*word*`
 --------------------------------------------------------------------------------
@@ -437,7 +389,7 @@ att-17: prevent close modifier inside verbatim
 ))
 
 ================================================================================
-att-18: hard test verbatim & non-verbatim
+att-17: hard test verbatim & non-verbatim
 ================================================================================
 `*$/_-!&word&!-_/*$`
 --------------------------------------------------------------------------------
@@ -464,28 +416,29 @@ att-18: hard test verbatim & non-verbatim
 ))
 
 ================================================================================
-att-19: LTR rule 1
+att-18: LTR rule 1
 ================================================================================
 */word*/
 --------------------------------------------------------------------------------
 (document
   (paragraph
-    (bold
+    (unclosed_bold
       (bold_open)
-      (italic_open)
-      (word)
-      (bold_close))
-    (punctuation)
+      (italic
+        (italic_open)
+        (word)
+        (punctuation)
+        (italic_close)))
 ))
 
 ================================================================================
-att-20: LTR rule 2
+att-19: LTR rule 2
 ================================================================================
 *`word*`
 --------------------------------------------------------------------------------
 (document
   (paragraph
-    (open_conflict
+    (unclosed_bold
       (bold_open)
       (verbatim
         (verbatim_open)
@@ -494,34 +447,31 @@ att-20: LTR rule 2
         (verbatim_close)))))
 
 ================================================================================
-att-21: LTR rule 3
+att-20: LTR rule 3
 ================================================================================
-*/_-%`word%-_/*`
+*/_~`word~_/*`
 --------------------------------------------------------------------------------
 (document
   (paragraph
-    (open_conflict
+    (unclosed_bold
       (bold_open)
-      (open_conflict
+      (unclosed_italic
         (italic_open)
-        (open_conflict
+        (unclosed_underline
           (underline_open)
-          (open_conflict
+          (unclosed_strikethrough
             (strikethrough_open)
-            (open_conflict
-              (inline_comment_open)
-              (verbatim
-                (verbatim_open)
-                (word)
-                (punctuation)
-                (punctuation)
-                (punctuation)
-                (punctuation)
-                (punctuation)
-                (verbatim_close)))))))))
+            (verbatim
+              (verbatim_open)
+              (word)
+              (punctuation)
+              (punctuation)
+              (punctuation)
+              (punctuation)
+              (verbatim_close))))))))
 
 ================================================================================
-att-22: LTR rule 4
+att-21: LTR rule 4
 ================================================================================
 `*word`*
 --------------------------------------------------------------------------------
@@ -536,9 +486,9 @@ att-22: LTR rule 4
 ))
 
 ================================================================================
-att-23: LTR rule 5
+att-22: LTR rule 5
 ================================================================================
-`*/_-%word`%-_/*
+`*/_~word`~_/*
 --------------------------------------------------------------------------------
 (document
   (paragraph
@@ -548,41 +498,38 @@ att-23: LTR rule 5
       (punctuation)
       (punctuation)
       (punctuation)
-      (punctuation)
       (word)
       (verbatim_close))
-    (open_conflict
-      (inline_comment_open)
-      (open_conflict
-        (strikethrough_open)
-        (open_conflict
-          (underline_open)
-          (open_conflict
-            (italic_open)
-            (punctuation)))))
+    (unclosed_strikethrough
+      (strikethrough_open)
+      (unclosed_underline
+        (underline_open)
+        (unclosed_italic
+          (italic_open)
+          (punctuation))))
 ))
 
 ================================================================================
-att-24: reset unclosed attached modifier after closing parent markup
+att-23: reset unclosed attached modifier after closing parent markup
 ================================================================================
 */word* /word/
 --------------------------------------------------------------------------------
 (document
   (paragraph
-    (bold
+    (unclosed_bold
       (bold_open)
-      (italic_open)
-      (word)
-      (bold_close))
-    (whitespace)
-    (italic
-      (italic_open)
-      (word)
-      (italic_close))
+      (italic
+        (italic_open)
+        (word)
+        (punctuation)
+        (whitespace)
+        (punctuation)
+        (word)
+        (italic_close)))
 ))
 
 ================================================================================
-att-25: don't try pre-opened markup inside open_conflict
+att-24: don't try pre-opened markup inside open_conflict
 ================================================================================
 */word *word*
 --------------------------------------------------------------------------------
@@ -599,9 +546,9 @@ att-25: don't try pre-opened markup inside open_conflict
 ))
 
 ================================================================================
-att-26: higher dynamic precedence level to verbatim
+att-25: higher dynamic precedence level to verbatim
 ================================================================================
-`--word` word `word word
+`~~word` word `word word
 --------------------------------------------------------------------------------
 (document
   (paragraph
@@ -613,7 +560,7 @@ att-26: higher dynamic precedence level to verbatim
     (whitespace)
     (word)
     (whitespace)
-    (open_conflict
+    (unclosed_verbatim
       (verbatim_open)
       (word)
       (whitespace)

@@ -44,54 +44,52 @@ word :*word*
     (word)
     (punctuation)
     (word)
-    (paragraph_break))
+    (soft_break))
   (paragraph
     (punctuation)
     (word)
-    (paragraph_break))
+    (soft_break))
   (paragraph
     (word)
     (punctuation)
-    (paragraph_break))
+    (soft_break))
   (paragraph
     (bold
       (bold_open)
       (punctuation)
       (word)
       (bold_close))
-    (paragraph_break))
+    (soft_break))
   (paragraph
     (bold
       (bold_open)
       (word)
       (punctuation)
       (bold_close))
-    (paragraph_break))
-  (paragraph
-    (punctuation)
-    (bold
-      (bold_open)
-      (word)
-      (bold_close))
-    (paragraph_break))
+    (soft_break))
   (paragraph
     (bold
       (bold_open)
       (word)
       (bold_close))
-    (punctuation)
-    (paragraph_break))
+    (soft_break))
+  (paragraph
+    (bold
+      (bold_open)
+      (word)
+      (bold_close))
+    (soft_break))
   (paragraph
     (word)
     (punctuation)
     (punctuation)
-    (paragraph_break))
+    (soft_break))
   (paragraph
-    (open_conflict
+    (unclosed_bold
       (bold_open)
       (punctuation)
-      (word))
-    (paragraph_break))
+      (word)
+      (soft_break)))
   (paragraph
     (bold
       (bold_open)
@@ -99,42 +97,42 @@ word :*word*
       (word)
       (punctuation)
       (bold_close))
-    (paragraph_break))
+    (soft_break))
   (paragraph
     (word)
     (punctuation)
     (punctuation)
     (word)
-    (paragraph_break))
+    (soft_break))
   (paragraph
     (word)
-    (open_conflict
+    (unclosed_bold
       (bold_open)
-      (word))
-    (paragraph_break))
+      (word)
+      (soft_break)))
   (paragraph
     (word)
     (punctuation)
     (punctuation)
     (word)
-    (open_conflict
+    (unclosed_bold
       (bold_open)
-      (word))
-    (paragraph_break))
+      (word)
+      (soft_break)))
   (paragraph
     (bold
       (bold_open)
       (word)
       (bold_close))
     (word)
-    (paragraph_break))
+    (soft_break))
   (paragraph
     (word)
     (bold
       (bold_open)
       (word)
       (bold_close))
-    (paragraph_break))
+    (soft_break))
   (paragraph
     (bold
       (bold_open)
@@ -145,7 +143,7 @@ word :*word*
       (bold_open)
       (word)
       (bold_close))
-    (paragraph_break))
+    (soft_break))
   (paragraph
     (word)
     (bold
@@ -153,22 +151,19 @@ word :*word*
       (word)
       (bold_close))
     (word)
-    (paragraph_break))
+    (soft_break))
   (paragraph
     (word)
     (whitespace)
-    (punctuation)
     (bold
       (bold_open)
       (word)
       (bold_close))
-    (paragraph_break))
+    (soft_break))
   (paragraph
     (bold
       (bold_open)
       (word)
       (bold_close))
-    (punctuation)
     (whitespace)
-    (word)
-    (paragraph_break)))
+    (word)))

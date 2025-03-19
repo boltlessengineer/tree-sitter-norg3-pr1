@@ -47,6 +47,22 @@ paragraph
         (paragraph
           (word))))))
 
+================================================================================
+heading-01: heading after paragraph
+================================================================================
+paragraph
+* heading
+--------------------------------------------------------------------------------
+(document
+  (paragraph
+    (word)
+    (soft_break))
+  (section
+    heading: (heading
+      (heading_prefix)
+      (paragraph
+        (word)))))
+
 ; TODO: add more tests
 
 ; vim:ts=2:sw=2:

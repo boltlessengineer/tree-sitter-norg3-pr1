@@ -282,11 +282,9 @@ static bool is_whitespace(int32_t character) {
 
 // possible result:
 // - HEADING
-// - INDENT_LIST
-// - *_LIST_PREFIX
 // - RANGED_OPEN
 // - *_TAG_PREFIX
-static scan_action scan_prefix(Scanner *self, const bool *valid_symbols, const int32_t character) {
+static scan_action scan_nonlist_prefix(Scanner *self, const bool *valid_symbols, const int32_t character, const bool mark_end) {
     if (
         (valid_symbols[HEADING] || valid_symbols[DEDENT_LIST])
         && character == '*'
@@ -304,7 +302,7 @@ static scan_action scan_prefix(Scanner *self, const bool *valid_symbols, const i
                 return ACCEPT;
             }
             vec_u32_push(&self->indent_heading, count);
-            if (!valid_symbols[DEDENT_LIST]) lex_mark_end();
+            if (mark_end) lex_mark_end();
             lex_set_result(HEADING);
             return ACCEPT;
         }
@@ -321,7 +319,7 @@ static scan_action scan_prefix(Scanner *self, const bool *valid_symbols, const i
             count++;
         }
         if (!iswspace(lex_next)) {
-            if (!valid_symbols[DEDENT_LIST]) lex_mark_end();
+            if (mark_end) lex_mark_end();
             lex_set_result(RANGED_OPEN);
             self->range_column = token_start_column;
             self->range_repeat = count;
@@ -333,7 +331,7 @@ static scan_action scan_prefix(Scanner *self, const bool *valid_symbols, const i
         && character == '.'
         && is_word(lex_next)
     ) {
-        if (!valid_symbols[DEDENT_LIST]) lex_mark_end();
+        if (mark_end) lex_mark_end();
         lex_set_result(INFIRM_TAG_PREFIX);
         return ACCEPT;
     } else if (
@@ -341,7 +339,7 @@ static scan_action scan_prefix(Scanner *self, const bool *valid_symbols, const i
         && character == '#'
         && (is_word(lex_next) || lex_next == '(')
     ) {
-        if (!valid_symbols[DEDENT_LIST]) lex_mark_end();
+        if (mark_end) lex_mark_end();
         lex_set_result(CARRYOVER_TAG_PREFIX);
         return ACCEPT;
     }
@@ -393,6 +391,27 @@ static scan_action scan_list(Scanner *self, const bool *valid_symbols, const int
         return FAIL;
     }
     return SCAN_SKIP;
+}
+
+static scan_action scan_prefix(Scanner *self, const bool *valid_symbols, const int32_t character) {
+    if (valid_symbols[DEDENT_LIST]) {
+        const scan_action action = scan_nonlist_prefix(self, valid_symbols, character, false);
+        switch (action) {
+            case ACCEPT:
+                vec_u32_pop(&self->indent_list);
+                lex_set_result(DEDENT_LIST);
+                return ACCEPT;
+            case FAIL:
+                return FAIL;
+            case SCAN_SKIP:
+                break;
+        }
+    } else {
+        const scan_action action = scan_nonlist_prefix(self, valid_symbols, character, true);
+        if (action != SCAN_SKIP)
+            return action;
+    }
+    return scan_list(self, valid_symbols, character);
 }
 
 static bool scan(Scanner *self, const bool *valid_symbols) {
@@ -460,7 +479,20 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
     if (iswspace(lex_next)) lex_skip();
     else lex_advance();
 
-    if (start_column == 0 && is_whitespace(character)) {
+    if (start_column == 0 && is_newline(character)) {
+        LOG("blank line detected\n");
+        if (valid_symbols[DEDENT_LIST]) {
+            vec_u32_pop(&self->indent_list);
+            lex_set_result(DEDENT_LIST);
+            return true;
+        }
+        if (valid_symbols[BLANK_LINE]) {
+            lex_mark_end();
+            lex_set_result(BLANK_LINE);
+            return true;
+        }
+        return false;
+    } else if (start_column == 0 && is_whitespace(character)) {
         while (is_whitespace(lex_next))
             lex_skip();
         if (valid_symbols[BLANK_LINE] && is_newline(lex_next)) {
@@ -478,46 +510,24 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
         TRY_SCAN(scan_prefix(self, valid_symbols, character));
 
         return false;
-    } else if (start_column == 0 && is_newline(character)) {
-        LOG("blank line detected\n");
-        if (valid_symbols[DEDENT_LIST]) {
-            vec_u32_pop(&self->indent_list);
-            lex_set_result(DEDENT_LIST);
-            return true;
-        }
-        if (valid_symbols[BLANK_LINE]) {
-            lex_mark_end();
-            lex_set_result(BLANK_LINE);
-            return true;
-        }
     } else if (start_column == 0 || valid_symbols[INDENTED_LINE_START]) {
-        if (start_column == 0 && valid_symbols[DEDENT_LIST]) {
-            switch (scan_prefix(self, valid_symbols, character)) {
-                case ACCEPT:
-                    vec_u32_pop(&self->indent_list);
-                    lex_set_result(DEDENT_LIST);
-                    return true;
-                case FAIL:
-                    return false;
-                case SCAN_SKIP:
-                    break;
-            }
-            const scan_action action = scan_list(self, valid_symbols, character);
-            TRY_SCAN(action);
-            // TRY_SCAN(scan_list(self, valid_symbols, character));
-        } else {
-            TRY_SCAN(scan_prefix(self, valid_symbols, character));
-            TRY_SCAN(scan_list(self, valid_symbols, character));
-        }
+        TRY_SCAN(scan_prefix(self, valid_symbols, character));
     }
 
     // scan attached modifier
-    const token_type kind_token = char_to_attached_mod(character);
+    int32_t first_char = character;
+    const bool link_mod_left = first_char == ':';
+    if (link_mod_left) {
+        first_char = lex_next;
+        lex_advance();
+    }
+    const token_type kind_token = char_to_attached_mod(first_char);
     if (kind_token) {
         LOG("meet attached modifier\n");
         if (
-            !valid_symbols[NOT_OPEN]
+            (link_mod_left || !valid_symbols[NOT_OPEN])
             && valid_symbols[kind_token]
+            && !valid_symbols[kind_token + 1]
             && !iswspace(lex_next)
             && !lex_eof
             && !valid_symbols[VERBATIM_CLOSE]
@@ -528,12 +538,15 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
             lex_set_result(kind_token);
             return true;
         } else if (
-            !valid_symbols[NOT_CLOSE]
+            !link_mod_left
+            && !valid_symbols[NOT_CLOSE]
             && valid_symbols[kind_token + 1]
             && !is_word(lex_next)
         ) {
-            if (character == lex_next)
+            if (first_char == lex_next)
                 return false;
+            if (lex_next == ':')
+                lex_advance();
             lex_mark_end();
             lex_set_result(kind_token + 1);
             return true;

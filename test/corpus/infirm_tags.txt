@@ -3,11 +3,11 @@ infirm-00: Basic infirm tag
 ================================================================================
 .infirm param
 --------------------------------------------------------------------------------
-;; TODO: fix parameter token to allow params like `/path/to/image`
+;; TODO: fix argument token
 (document
   (infirm_tag
-    (identifier)
-    argument: (argument)))
+    name: (identifier)
+    (word)))
 
 ================================================================================
 infirm-01: Not infirm tag
@@ -18,7 +18,6 @@ infirm-01: Not infirm tag
   (paragraph
     (punctuation)
     (punctuation)
-    (punctuation)
-    (paragraph_break)))
+    (punctuation)))
 
 ; vim:ts=2:sw=2:
