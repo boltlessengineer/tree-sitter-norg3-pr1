@@ -155,8 +155,8 @@ enum token_type {
 
     BLANK_LINE,
 
-    NOT_OPEN, // right after word char
-    NOT_CLOSE, // right after whitespace
+    FLAG_NOT_OPEN, // right after word char
+    FLAG_NOT_CLOSE, // right after whitespace
 
     BOLD_OPEN,
     BOLD_CLOSE,
@@ -189,6 +189,7 @@ enum token_type {
 
     HEADING,
     TABLE,
+
     UNORDERED_LIST,
     ORDERED_LIST,
     QUOTE_LIST,
@@ -197,7 +198,7 @@ enum token_type {
     DEDENT,
     INDENT_LIST,
     DEDENT_LIST,
-    INDENTED_LINE_START,
+    FLAG_INDENTED_LINE_START,
 
     INFIRM_TAG_PREFIX,
     CARRYOVER_TAG_PREFIX,
@@ -228,7 +229,7 @@ static token_type char_to_attached_mod(int32_t c) {
         case '`':
             return VERBATIM_OPEN;
     }
-    return ERROR_MODE;
+    return 0;
 }
 
 static token_type char_to_indent_mod(int32_t c) {
@@ -515,7 +516,7 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
         TRY_SCAN(scan_prefix(self, valid_symbols, character));
 
         return false;
-    } else if (start_column == 0 || valid_symbols[INDENTED_LINE_START]) {
+    } else if (start_column == 0 || valid_symbols[FLAG_INDENTED_LINE_START]) {
         TRY_SCAN(scan_prefix(self, valid_symbols, character));
     }
 
@@ -530,7 +531,7 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
     if (kind_token) {
         LOG("meet attached modifier\n");
         if (
-            (link_mod_left || !valid_symbols[NOT_OPEN])
+            (link_mod_left || !valid_symbols[FLAG_NOT_OPEN])
             && valid_symbols[kind_token]
             && !valid_symbols[kind_token + 1]
             && !iswspace(lex_next)
@@ -544,7 +545,7 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
             return true;
         } else if (
             !link_mod_left
-            && !valid_symbols[NOT_CLOSE]
+            && !valid_symbols[FLAG_NOT_CLOSE]
             && valid_symbols[kind_token + 1]
             && !is_word(lex_next)
         ) {

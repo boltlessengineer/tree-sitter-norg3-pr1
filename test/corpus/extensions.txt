@@ -9,7 +9,7 @@ ext-00: Attributes in attached modifier
       (bold_open)
       (word)
       (bold_close)
-      (attributes
+      attributes: (attributes
         (attribute
           key: (value)
           value: (value))
@@ -49,7 +49,7 @@ ext-02: Attributes in structural detached modifier
   (section
     heading: (heading
       (heading_prefix)
-      (attributes
+      attributes: (attributes
         (attribute
           key: (value))
         (attribute
@@ -60,7 +60,7 @@ ext-02: Attributes in structural detached modifier
   (section
     heading: (heading
       (heading_prefix)
-      (attributes
+      attributes: (attributes
         (attribute)
         (attribute
           key: (value)
@@ -84,7 +84,7 @@ ext-03: Attributes in nestable detached modifier
   (unordered_list
     (unordered_list_item
       (unordered_list_prefix)
-      (attributes
+      attributes: (attributes
         (attribute
           key: (value))
         (attribute
@@ -97,7 +97,7 @@ ext-03: Attributes in nestable detached modifier
         (soft_break)))
     (unordered_list_item
       (unordered_list_prefix)
-      (attributes
+      attributes: (attributes
         (attribute)
         (attribute
           key: (value)
@@ -123,7 +123,7 @@ ext-04: Trailing whitespace
   (section
     heading: (heading
       (heading_prefix)
-      (attributes
+      attributes: (attributes
         (attribute)
         (attribute
           key: (value)
@@ -133,7 +133,7 @@ ext-04: Trailing whitespace
   (section
     heading: (heading
       (heading_prefix)
-      (attributes
+      attributes: (attributes
         (attribute
           key: (value)
           value: (value)))
@@ -155,7 +155,7 @@ ext-05: Ignoring whitespaces
   (section
     heading: (heading
       (heading_prefix)
-      (attributes
+      attributes: (attributes
         (attribute
           key: (value)))
       (paragraph
@@ -163,7 +163,7 @@ ext-05: Ignoring whitespaces
   (section
     heading: (heading
       (heading_prefix)
-      (attributes
+      attributes: (attributes
         (attribute
           key: (value)))
       (paragraph
@@ -171,7 +171,7 @@ ext-05: Ignoring whitespaces
   (section
     heading: (heading
       (heading_prefix)
-      (attributes
+      attributes: (attributes
         (attribute
           key: (value)))
       (paragraph
@@ -179,7 +179,7 @@ ext-05: Ignoring whitespaces
   (section
     heading: (heading
       (heading_prefix)
-      (attributes
+      attributes: (attributes
         (attribute
           key: (value)))
       (paragraph
@@ -187,7 +187,7 @@ ext-05: Ignoring whitespaces
   (section
     heading: (heading
       (heading_prefix)
-      (attributes
+      attributes: (attributes
         (attribute
           key: (value))
         (attribute))
@@ -205,7 +205,7 @@ ext-06: Semicolon after auto-semicolon by newline
   (section
     heading: (heading
       (heading_prefix)
-      (attributes
+      attributes: (attributes
         (attribute
           key: (value))
         (attribute

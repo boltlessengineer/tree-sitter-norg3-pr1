@@ -28,31 +28,31 @@ text
 (document
   (ranged_tag
     (ranged_open)
-    (word)
-    (verbatim_line)
+    name: (identifier)
+    line: (verbatim_line)
     (ranged_close))
   (ranged_tag
     (ranged_open)
-    (word)
-    (verbatim_line)
+    name: (identifier)
+    line: (verbatim_line)
     (ranged_close))
   (ranged_tag
     (ranged_open)
-    (word)
-    (verbatim_line)
+    name: (identifier)
+    line: (verbatim_line)
     (ranged_close))
   (ranged_tag
     (ranged_open)
-    (word)
-    (verbatim_line)
+    name: (identifier)
+    line: (verbatim_line)
     (ranged_close))
   (ranged_tag
     (ranged_open)
-    (word)
-    (verbatim_line)
+    name: (identifier)
+    line: (verbatim_line)
     (ranged_close))
   (ranged_tag
     (ranged_open)
-    (word)
-    (verbatim_line)
+    name: (identifier)
+    line: (verbatim_line)
     (ranged_close)))

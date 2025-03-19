@@ -26,6 +26,12 @@ const ATTACHED_MODIFIERS = [
     // "subscript",
 ];
 
+// TODO: check list when I come back to this code:
+// - paragraph + paragraph <- this is allowed without newline between them.
+//   currently line break at the end of a paragraph is not a requirement
+// - bold inside italic inside bold <- should prevent this.
+//   can't do with grammar, so have to track states from external lexer.
+
 module.exports = grammar({
     name: "norg",
 
@@ -36,8 +42,8 @@ module.exports = grammar({
 
         $._blank_line,
 
-        $.not_open,
-        $.not_close,
+        $.flag_not_open,
+        $.flag_not_close,
 
         $.bold_open,
         $.bold_close,
@@ -79,7 +85,7 @@ module.exports = grammar({
         $._dedent_heading,
         $._indent_list,
         $._dedent_list,
-        $._indented_line_start,
+        $.flag_indented_line_start,
 
         $._infirm_tag_prefix,
         $._carryover_tag_prefix,
@@ -97,6 +103,7 @@ module.exports = grammar({
         $._unclosed_attributes,
         $._closed_inline_content,
         $._inline_macro_head,
+        $._attribute_preceding_whitespace,
     ],
 
     supertypes: ($) => [
@@ -142,7 +149,7 @@ module.exports = grammar({
             optional(seq(
                 whitespace,
                 optional(seq(
-                    $.attributes,
+                    field("attributes", $.attributes),
                     whitespace,
                 )),
                 optional($.paragraph),
@@ -163,10 +170,11 @@ module.exports = grammar({
                 $[kind + "_prefix"],
                 whitespace,
                 optional(seq(
-                    $.attributes,
+                    field("attributes", $.attributes),
                     whitespace,
                 )),
-                choice($.block, $._indented_line_start),
+                optional($.flag_indented_line_start),
+                $.block,
                 repeat(choice(
                     $._indented_block,
                     $.list,
@@ -177,10 +185,8 @@ module.exports = grammar({
         _indented_block: ($) => seq(
             $.null_list_prefix,
             whitespace,
-            choice(
-                $.block,
-                $._indented_line_start,
-            ),
+            optional($.flag_indented_line_start),
+            $.block,
         ),
 
         // prefixs that will break the paragraph:
@@ -198,10 +204,10 @@ module.exports = grammar({
         // rename this to $._paragraph including preceding whitespace and paragraph inside.
         paragraph: ($) => prec(1, seq(optional(whitespace), $._inline)),
         _closed_inline_content: ($) => choice(
-            seq($.word, optional($.not_open)),
-            seq($.whitespace, optional($.not_close)),
-            seq($.soft_break, optional($.not_close)),
-            seq($.hard_break, optional($.not_close)),
+            seq($.word, optional($.flag_not_open)),
+            seq($.whitespace, optional($.flag_not_close)),
+            seq($.soft_break, optional($.flag_not_close)),
+            seq($.hard_break, optional($.flag_not_close)),
             $.escape_sequence,
             $.punctuation,
             ...ATTACHED_MODIFIERS.map((k) => [
@@ -234,9 +240,9 @@ module.exports = grammar({
         _verbatim_inline: ($) => prec.right(2, seq(
             choice(
                 $.word,
-                seq($.whitespace, optional($.not_close)),
-                seq($.soft_break, optional($.not_close)),
-                seq($.hard_break, optional($.not_close)),
+                seq($.whitespace, optional($.flag_not_close)),
+                seq($.soft_break, optional($.flag_not_close)),
+                seq($.hard_break, optional($.flag_not_close)),
                 $.escape_sequence,
                 $.punctuation,
                 // specify verbatim punctuations to prevent linkables or inline macros
@@ -253,6 +259,9 @@ module.exports = grammar({
             punctuation,
         )),
 
+        // small trick to prevent ANY opening modifiers including ones with link modifiers
+        flag_never_open: ($) => choice($.verbatim_close, $.flag_not_close),
+
         word: (_) => word,
         whitespace: (_) => whitespace,
         soft_break: (_) => prec.right(seq(
@@ -266,7 +275,7 @@ module.exports = grammar({
                 $[kind + "_open"],
                 $._closed_inline,
                 $[kind + "_close"],
-                optional($.attributes),
+                optional(field("attributes", $.attributes)),
             ));
             rules["unclosed_" + kind] = (/** @type any */ $) => choice(
                 prec.right(seq(
@@ -305,8 +314,7 @@ module.exports = grammar({
         target: ($) => prec.right(seq(
             "{",
             $._verbatim_inline,
-            // small trick to prevent bold_open
-            optional(choice($.verbatim_close, $.not_close)),
+            optional($.flag_never_open),
             token(prec(9, "}")),
         )),
         unclosed_target: ($) => prec.right(seq(
@@ -349,13 +357,9 @@ module.exports = grammar({
             ),
         ),
 
-        identifier: (_) => token(prec(1, repeat1(choice(
-            /[^;\(\)\n\r\p{Z}]/u,
-            token(seq("\\", choice(/./, newline))),
-        )))),
         attributes: ($) => seq(
             $._unclosed_attributes,
-            optional(choice($.verbatim_close, $.not_close)),
+            optional($.flag_never_open),
             token(prec(9, ")")),
         ),
         unclosed_attributes: ($) => $._unclosed_attributes,
@@ -366,14 +370,14 @@ module.exports = grammar({
                 token(prec(9, ";")),
             )),
         )),
-        attribute: ($) => prec.right(2, choice(
+        _attribute_preceding_whitespace: (_) =>
             prec.right(repeat1(
                 token(prec(2, choice(whitespace, newline))),
             )),
+        attribute: ($) => prec.right(2, choice(
+            $._attribute_preceding_whitespace,
             seq(
-                prec.right(repeat(
-                    token(prec(2, choice(whitespace, newline))),
-                )),
+                optional($._attribute_preceding_whitespace),
                 field("key", alias($.key, $.value)),
                 optional(seq(
                     repeat1(token(prec(3, whitespace_or_newline))),
@@ -415,7 +419,7 @@ module.exports = grammar({
         inline_macro: ($) => prec.right(seq(
             $._inline_macro_head,
             optional($.markup),
-            optional($.attributes),
+            optional(field("attributes", $.attributes)),
         )),
         unclosed_inline_macro: ($) => seq(
             $._inline_macro_head,
@@ -425,12 +429,16 @@ module.exports = grammar({
             ),
         ),
 
+        identifier: (_) => token(prec(1, repeat1(choice(
+            /[^;\(\)\n\r\p{Z}]/u,
+            escape_sequence,
+            // token(seq("\\", choice(/./, newline))),
+        )))),
         verbatim_line: (_) => seq(/[^\n\r]*/u, newline_or_eof),
         ranged_tag: ($) => seq(
-            $.ranged_open, field("name", $.word), newline,
-            repeat(seq(optional($._preceding_verbatim_whitespace), $.verbatim_line)),
-            optional($._preceding_verbatim_whitespace),
-            $.ranged_close,
+            seq($.ranged_open, field("name", $.identifier), newline),
+            repeat(seq(optional($._preceding_verbatim_whitespace), field("line", $.verbatim_line))),
+            seq(optional($._preceding_verbatim_whitespace), $.ranged_close),
         ),
         infirm_tag: ($) => seq(
             $._infirm_tag_prefix,
@@ -445,7 +453,7 @@ module.exports = grammar({
                     field("name", $.identifier),
                     optional(seq(whitespace, $._verbatim_inline)),
                 ),
-                $.attributes,
+                field("attributes", $.attributes),
             ),
             newline_or_eof,
         ),
