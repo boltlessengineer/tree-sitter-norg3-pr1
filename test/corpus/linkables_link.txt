@@ -6,8 +6,7 @@ link-00: Standalone link
 (document
   (paragraph
     (link
-      target: (uri))
-    (paragraph_break)))
+      target: (uri))))
 
 ================================================================================
 link-01: norg file type target
@@ -18,8 +17,7 @@ link-01: norg file type target
   (paragraph
     (link
       target: (norg_file
-        path: (path)))
-    (paragraph_break)))
+        path: (path)))))
 
 ================================================================================
 link-02: norg file type target with current workspace root
@@ -31,8 +29,7 @@ link-02: norg file type target with current workspace root
     (link
       target: (norg_file
         root: (current_workspace)
-        path: (path)))
-    (paragraph_break)))
+        path: (path)))))
 
 ================================================================================
 link-03: norg file type target with workspace root
@@ -44,8 +41,7 @@ link-03: norg file type target with workspace root
     (link
       target: (norg_file
         root: (workspace)
-        path: (path)))
-    (paragraph_break)))
+        path: (path)))))
 
 ================================================================================
 link-04: norg file type target with file root
@@ -57,8 +53,7 @@ link-04: norg file type target with file root
     (link
       target: (norg_file
         root: (file_root)
-        path: (path)))
-    (paragraph_break)))
+        path: (path)))))
 
 ================================================================================
 link-05: scope type target (heading)
@@ -72,8 +67,7 @@ link-05: scope type target (heading)
         (link_scope_heading
           (heading_prefix)
           (title
-            (word)))))
-    (paragraph_break)))
+            (word)))))))
 
 ================================================================================
 link-06: scope type target (footnote)
@@ -87,8 +81,7 @@ link-06: scope type target (footnote)
         (link_scope_footnote
           (footnote_prefix)
           (title
-            (word)))))
-    (paragraph_break)))
+            (word)))))))
 
 ================================================================================
 link-07: scope type target (definition)
@@ -102,8 +95,7 @@ link-07: scope type target (definition)
         (link_scope_definition
           (definition_prefix)
           (title
-            (word)))))
-    (paragraph_break)))
+            (word)))))))
 
 ================================================================================
 link-08: multiple scoped target
@@ -125,8 +117,7 @@ link-08: multiple scoped target
         (link_scope_footnote
           (footnote_prefix)
           (title
-            (word)))))
-    (paragraph_break)))
+            (word)))))))
 
 ================================================================================
 link-09: LTR rule 1
@@ -142,8 +133,7 @@ link-09: LTR rule 1
       (whitespace)
       (word)
       (verbatim_close))
-      (punctuation)
-    (paragraph_break)))
+      (punctuation)))
 
 ================================================================================
 link-10: don't break attached modifier
@@ -164,8 +154,7 @@ link-10: don't break attached modifier
     (italic
       (italic_open)
       (word)
-      (italic_close))
-    (paragraph_break)))
+      (italic_close))))
 
 ================================================================================
 link-11: Verbatim > link
@@ -195,8 +184,7 @@ link-11: Verbatim > link
               (verbatim_open)
               (word)
               (punctuation)
-              (verbatim_close))))))
-    (paragraph_break)))
+              (verbatim_close))))))))
 
 ================================================================================
 link-12: free-form verbatim > link
@@ -216,8 +204,7 @@ link-12: free-form verbatim > link
               (word)
               (punctuation)
               (free_form_close)
-              (verbatim_close))))))
-    (paragraph_break)))
+              (verbatim_close))))))))
 
 ================================================================================
 link-12: escape sequence > link
@@ -232,8 +219,7 @@ link-12: escape sequence > link
           (heading_prefix)
           (title
             (word)
-            (escape_sequence)))))
-    (paragraph_break)))
+            (escape_sequence)))))))
 
 ================================================================================
 link-13: punctuation > link
@@ -248,8 +234,7 @@ link-13: punctuation > link
           (heading_prefix)
           (title
             (word)))))
-    (punctuation)
-    (paragraph_break)))
+    (punctuation)))
 
 ================================================================================
 link-14: verbatim > link wiki target prefix
@@ -265,8 +250,7 @@ link-14: verbatim > link wiki target prefix
       (whitespace)
       (word)
       (punctuation)
-      (verbatim_close))
-    (paragraph_break)))
+      (verbatim_close))))
 
 ================================================================================
 link-15: link wiki target prefix > unclosed verbatim
@@ -280,8 +264,7 @@ link-15: link wiki target prefix > unclosed verbatim
       (link
         target: (link_target_wiki
           (wiki_prefix)
-          value: (path))))
-    (paragraph_break)))
+          value: (path))))))
 
 ================================================================================
 link-16: verbatim > link file target prefix
@@ -297,8 +280,7 @@ link-16: verbatim > link file target prefix
       (whitespace)
       (word)
       (punctuation)
-      (verbatim_close))
-    (paragraph_break)))
+      (verbatim_close))))
 
 ================================================================================
 link-17: link file target prefix > unclosed verbatim
@@ -312,8 +294,7 @@ link-17: link file target prefix > unclosed verbatim
       (link
         target: (link_target_file
           (file_prefix)
-          value: (path))))
-    (paragraph_break)))
+          value: (path))))))
 
 ================================================================================
 link-18: verbatim > unclosed URI link
@@ -327,8 +308,7 @@ link-18: verbatim > unclosed URI link
       (punctuation)
       (word)
       (punctuation)
-      (verbatim_close))
-    (paragraph_break)))
+      (verbatim_close))))
 
 ================================================================================
 link-19: URI link > unclosed verbatim
@@ -340,8 +320,7 @@ link-19: URI link > unclosed verbatim
     (open_conflict
       (verbatim_open)
       (link
-        target: (uri)))
-    (paragraph_break)))
+        target: (uri)))))
 
 ================================================================================
 link-20: non-verbatim precedence
@@ -383,8 +362,7 @@ link-20: non-verbatim precedence
               (whitespace)
               (punctuation)
               (free_form_close)
-              (bold_close))))))
-    (paragraph_break)))
+              (bold_close))))))))
 
 ================================================================================
 link-21: verbatim precedence
@@ -426,8 +404,7 @@ link-21: verbatim precedence
               (punctuation)
               (punctuation)
               (free_form_close)
-              (verbatim_close))))))
-    (paragraph_break)))
+              (verbatim_close))))))))
 
 ================================================================================
 link-22: closing modifier without opening modifier (1)
@@ -440,8 +417,7 @@ link-22: closing modifier without opening modifier (1)
       (bold_open)
       (word)
       (punctuation)
-      (bold_close))
-    (paragraph_break)))
+      (bold_close))))
 
 ================================================================================
 link-23: closing modifier without opening modifier (2)
@@ -460,7 +436,6 @@ link-23: closing modifier without opening modifier (2)
             (verbatim
               (verbatim_open)
               (punctuation)
-              (verbatim_close))))))
-    (paragraph_break)))
+              (verbatim_close))))))))
 
 ; vim:ts=2:sw=2:

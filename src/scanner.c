@@ -182,6 +182,11 @@ enum token_type {
     VERBATIM_OPEN,
     VERBATIM_CLOSE,
 
+    // MARKUP_OPEN,
+    // MARKUP_CLOSE,
+    // TARGET_OPEN,
+    // TARGET_CLOSE,
+
     HEADING,
     TABLE,
     UNORDERED_LIST,

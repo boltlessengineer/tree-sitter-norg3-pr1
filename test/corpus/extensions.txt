@@ -9,14 +9,13 @@ ext-00: Attributes in attached modifier
       (bold_open)
       (word)
       (bold_close)
-      (extensions
-        (ext_attribute
-          key: (ext_identifier)
-          value: (ext_param))
-        (ext_attribute
-          key: (ext_identifier)
-          value: (ext_param))))
-    (paragraph_break)))
+      (attributes
+        (attribute
+          key: (value)
+          value: (value))
+        (attribute
+          key: (value)
+          value: (value))))))
 
 ================================================================================
 ext-01: failed extension by verbatim close
@@ -35,7 +34,7 @@ ext-01: failed extension by verbatim close
       ; (punctuation)
       ; (word)
       (verbatim_close))
-    (paragraph_break)))
+    ))
 
 ================================================================================
 ext-02: Attributes in structural detached modifier
@@ -43,34 +42,34 @@ ext-02: Attributes in structural detached modifier
 * (x;@ A) heading
 * ( ;
    @ A;
-   > 5th Aug 2024;
+   > 5th Aug 2024
   ) heading
 --------------------------------------------------------------------------------
 (document
-  (heading
-    (heading_prefix)
-    (extensions
-      (ext_attribute
-        key: (ext_identifier))
-      (ext_attribute
-        key: (ext_identifier)
-        value: (ext_param)))
-    title: (paragraph
-      (word)
-      (paragraph_break)))
-  (heading
-    (heading_prefix)
-    (extensions
-      (ext_attribute)
-      (ext_attribute
-        key: (ext_identifier)
-        value: (ext_param))
-      (ext_attribute
-        key: (ext_identifier)
-        value: (ext_param)))
-    title: (paragraph
-      (word)
-      (paragraph_break))))
+  (section
+    heading: (heading
+      (heading_prefix)
+      (attributes
+        (attribute
+          key: (value))
+        (attribute
+          key: (value)
+          value: (value)))
+      (paragraph
+        (word))))
+  (section
+    heading: (heading
+      (heading_prefix)
+      (attributes
+        (attribute)
+        (attribute
+          key: (value)
+          value: (value))
+        (attribute
+          key: (value)
+          value: (value)))
+      (paragraph
+        (word)))))
 
 ================================================================================
 ext-03: Attributes in nestable detached modifier
@@ -78,112 +77,42 @@ ext-03: Attributes in nestable detached modifier
 - (x;@ A) list item
 - ( ;
    @ A;
-   > 5th Aug 2024;
+   > 5th Aug 2024
   ) list item
 --------------------------------------------------------------------------------
 (document
   (unordered_list
     (unordered_list_item
       (unordered_list_prefix)
-      (extensions
-        (ext_attribute
-          key: (ext_identifier))
-        (ext_attribute
-          key: (ext_identifier)
-          value: (ext_param)))
+      (attributes
+        (attribute
+          key: (value))
+        (attribute
+          key: (value)
+          value: (value)))
       (paragraph
         (word)
         (whitespace)
         (word)
-        (paragraph_break)))
+        (soft_break)))
     (unordered_list_item
       (unordered_list_prefix)
-      (extensions
-        (ext_attribute)
-        (ext_attribute
-          key: (ext_identifier)
-          value: (ext_param))
-        (ext_attribute
-          key: (ext_identifier)
-          value: (ext_param)))
+      (attributes
+        (attribute)
+        (attribute
+          key: (value)
+          value: (value))
+        (attribute
+          key: (value)
+          value: (value)))
       (paragraph
         (word)
         (whitespace)
         (word)
-        (paragraph_break)))))
+        ))))
 
 ================================================================================
-ext-04: Attributes in range-able detached modifier
-================================================================================
-^ (x;@ A) word
-footnote
-^ ( ;
-   @ A;
-   > 5th Aug 2024;
-  ) word
-footnote
-^^ (x;@ A) word
-footnote
-^^
-^^ ( ;
-    @ A;
-    > 5th Aug 2024;
-   ) word
-footnote
-^^
---------------------------------------------------------------------------------
-(document
-  (footnote
-    (extensions
-      (ext_attribute
-        key: (ext_identifier))
-      (ext_attribute
-        key: (ext_identifier)
-        value: (ext_param)))
-    title: (verbatim_param_list)
-    (paragraph
-      (word)
-      (paragraph_break)))
-  (footnote
-    (extensions
-      (ext_attribute)
-      (ext_attribute
-        key: (ext_identifier)
-        value: (ext_param))
-      (ext_attribute
-        key: (ext_identifier)
-        value: (ext_param)))
-    title: (verbatim_param_list)
-    (paragraph
-      (word)
-      (paragraph_break)))
-  (footnote
-    (extensions
-      (ext_attribute
-        key: (ext_identifier))
-      (ext_attribute
-        key: (ext_identifier)
-        value: (ext_param)))
-    title: (verbatim_param_list)
-    (paragraph
-      (word)
-      (paragraph_break)))
-  (footnote
-    (extensions
-      (ext_attribute)
-      (ext_attribute
-        key: (ext_identifier)
-        value: (ext_param))
-      (ext_attribute
-        key: (ext_identifier)
-        value: (ext_param)))
-    title: (verbatim_param_list)
-    (paragraph
-      (word)
-      (paragraph_break))))
-
-================================================================================
-ext-05: Trailing whitespace
+ext-04: Trailing whitespace
 ================================================================================
 * ( ;      
    color red) heading
@@ -191,28 +120,28 @@ ext-05: Trailing whitespace
    color red) heading
 --------------------------------------------------------------------------------
 (document
-  (heading
-    (heading_prefix)
-    (extensions
-      (ext_attribute)
-      (ext_attribute
-        (ext_identifier)
-        (ext_param)))
-    (paragraph
-      (word)
-      (paragraph_break)))
-  (heading
-    (heading_prefix)
-    (extensions
-      (ext_attribute
-        (ext_identifier)
-        (ext_param)))
-    (paragraph
-      (word)
-      (paragraph_break))))
+  (section
+    heading: (heading
+      (heading_prefix)
+      (attributes
+        (attribute)
+        (attribute
+          key: (value)
+          value: (value)))
+      (paragraph
+        (word))))
+  (section
+    heading: (heading
+      (heading_prefix)
+      (attributes
+        (attribute
+          key: (value)
+          value: (value)))
+      (paragraph
+        (word)))))
 
 ================================================================================
-ext-06: Ignoring whitespaces
+ext-05: Ignoring whitespaces
 ================================================================================
 * (x ) heading
 * ( x) heading
@@ -223,64 +152,65 @@ ext-06: Ignoring whitespaces
   ) heading
 --------------------------------------------------------------------------------
 (document
-  (heading
-    (heading_prefix)
-    (extensions
-      (ext_attribute
-        key: (ext_identifier)))
-    title: (paragraph
-      (word)
-      (paragraph_break)))
-  (heading
-    (heading_prefix)
-    (extensions
-      (ext_attribute
-        key: (ext_identifier)))
-    title: (paragraph
-      (word)
-      (paragraph_break)))
-  (heading
-    (heading_prefix)
-    (extensions
-      (ext_attribute
-        key: (ext_identifier)))
-    title: (paragraph
-      (word)
-      (paragraph_break)))
-  (heading
-    (heading_prefix)
-    (extensions
-      (ext_attribute
-        key: (ext_identifier)))
-    title: (paragraph
-      (word)
-      (paragraph_break)))
-  (heading
-    (heading_prefix)
-    (extensions
-      (ext_attribute
-        key: (ext_identifier)))
-    title: (paragraph
-      (word)
-      (paragraph_break))))
+  (section
+    heading: (heading
+      (heading_prefix)
+      (attributes
+        (attribute
+          key: (value)))
+      (paragraph
+        (word))))
+  (section
+    heading: (heading
+      (heading_prefix)
+      (attributes
+        (attribute
+          key: (value)))
+      (paragraph
+        (word))))
+  (section
+    heading: (heading
+      (heading_prefix)
+      (attributes
+        (attribute
+          key: (value)))
+      (paragraph
+        (word))))
+  (section
+    heading: (heading
+      (heading_prefix)
+      (attributes
+        (attribute
+          key: (value)))
+      (paragraph
+        (word))))
+  (section
+    heading: (heading
+      (heading_prefix)
+      (attributes
+        (attribute
+          key: (value))
+        (attribute))
+      (paragraph
+        (word)))))
 
 ================================================================================
-ext-07: Semicolon after auto-semicolon by newline
+ext-06: Semicolon after auto-semicolon by newline
 ================================================================================
 * (asdf
 ; asdf
 ) word
 --------------------------------------------------------------------------------
 (document
-  (heading
-    (heading_prefix)
-    (extensions
-      (ext_attribute
-        key: (ext_identifier))
-      (ext_attribute
-        key: (ext_identifier)))
-    title: (paragraph
-      (word)
-      (paragraph_break))))
+  (section
+    heading: (heading
+      (heading_prefix)
+      (attributes
+        (attribute
+          key: (value))
+        (attribute
+          key: (value)))
+      (paragraph
+        (word)))))
 
 ; vim:ts=2:sw=2:

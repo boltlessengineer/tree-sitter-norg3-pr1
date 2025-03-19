@@ -6,9 +6,8 @@ anchor-00: Standalone anchor
 (document
   (paragraph
     (anchor
-      description: (description
-        (word)))
-    (paragraph_break)))
+      description: (markup
+        (word)))))
 
 ================================================================================
 anchor-01: Markup inside anchor description
@@ -18,7 +17,7 @@ anchor-01: Markup inside anchor description
 (document
   (paragraph
     (anchor
-      description: (description
+      description: (markup
         (bold
           (bold_open)
           (word)
@@ -27,8 +26,7 @@ anchor-01: Markup inside anchor description
             (italic_open)
             (word)
             (italic_close))
-          (bold_close))))
-    (paragraph_break)))
+          (bold_close))))))
 
 ================================================================================
 anchor-02: Verbatim > anchor
@@ -45,16 +43,15 @@ anchor-02: Verbatim > anchor
       (word)
       (punctuation)
       (verbatim_close))
-    (paragraph_break))
+    (soft_break))
   (paragraph
     (anchor
-      description: (description
+      description: (markup
         (verbatim
           (verbatim_open)
           (word)
           (punctuation)
-          (verbatim_close))))
-    (paragraph_break)))
+          (verbatim_close))))))
 
 ================================================================================
 anchor-03: free-form verbatim > anchor
@@ -64,15 +61,14 @@ anchor-03: free-form verbatim > anchor
 (document
   (paragraph
     (anchor
-      description: (description
+      description: (markup
         (verbatim
           (verbatim_open)
-          (free_form_open)
+          (punctuation)
           (word)
           (punctuation)
-          (free_form_close)
-          (verbatim_close))))
-    (paragraph_break)))
+          (punctuation)
+          (verbatim_close))))))
 
 ================================================================================
 anchor-04: reset attached modifier after destination
@@ -81,17 +77,16 @@ anchor-04: reset attached modifier after destination
 --------------------------------------------------------------------------------
 (document
   (paragraph
-    (anchor
-      description: (description
-        (open_conflict
+    (unclosed_anchor
+      description: (unclosed_markup
+        (bold
           (bold_open)
-          (word))))
-    (whitespace)
-    (bold
-      (bold_open)
-      (word)
-      (bold_close))
-    (paragraph_break)))
+          (word)
+          (punctuation)
+          (whitespace)
+          (punctuation)
+          (word)
+          (bold_close))))))
 
 ================================================================================
 anchor-05: anchor after unclosed verbatim
@@ -100,12 +95,11 @@ anchor-05: anchor after unclosed verbatim
 --------------------------------------------------------------------------------
 (document
   (paragraph
-    (open_conflict
+    (unclosed_verbatim
       (verbatim_open)
-      (anchor
-        description: (description
-            (word))))
-    (paragraph_break)))
+      (punctuation)
+      (word)
+      (punctuation))))
 
 ================================================================================
 anchor-06: non-verbatim precedence
@@ -118,31 +112,29 @@ anchor-06: non-verbatim precedence
 (document
   (paragraph
     (anchor
-      description: (description
-        (word)
-        (whitespace)
-        (open_conflict
-          (bold_open)
-          (word)
-          (whitespace))))
-    (open_conflict
-      (bold_open)
-      (punctuation))
-    (paragraph_break))
-  (paragraph
-    (anchor
-      description: (description
+      description: (markup
         (word)
         (whitespace)
         (bold
           (bold_open)
-          (free_form_open)
           (word)
           (whitespace)
           (punctuation)
-          (free_form_close)
           (bold_close))))
-    (paragraph_break)))
+    (soft_break))
+  (paragraph
+    (anchor
+      description: (markup
+        (word)
+        (whitespace)
+        (bold
+          (bold_open)
+          (punctuation)
+          (word)
+          (whitespace)
+          (punctuation)
+          (punctuation)
+          (bold_close))))))
 
 ================================================================================
 anchor-07: verbatim precedence
@@ -154,7 +146,7 @@ anchor-07: verbatim precedence
 (document
   (paragraph
     (anchor
-      description: (description
+      description: (markup
         (word)
         (whitespace)
         (verbatim
@@ -164,22 +156,21 @@ anchor-07: verbatim precedence
           (punctuation)
           (punctuation)
           (verbatim_close))))
-    (paragraph_break))
+    (soft_break))
   (paragraph
     (anchor
-      description: (description
+      description: (markup
         (word)
         (whitespace)
         (verbatim
           (verbatim_open)
-          (free_form_open)
+          (punctuation)
           (word)
           (whitespace)
           (punctuation)
           (punctuation)
-          (free_form_close)
-          (verbatim_close))))
-    (paragraph_break)))
+          (punctuation)
+          (verbatim_close))))))
 
 ================================================================================
 anchor-08: closing modifier without opening modifier (1)
@@ -192,8 +183,7 @@ anchor-08: closing modifier without opening modifier (1)
       (bold_open)
       (word)
       (punctuation)
-      (bold_close))
-    (paragraph_break)))
+      (bold_close))))
 
 ================================================================================
 anchor-09: closing modifier without opening modifier (2)
@@ -203,13 +193,12 @@ anchor-09: closing modifier without opening modifier (2)
 (document
   (paragraph
     (anchor
-      description: (description
+      description: (markup
         (word)
         (whitespace)
         (verbatim
           (verbatim_open)
           (punctuation)
-          (verbatim_close))))
-    (paragraph_break)))
+          (verbatim_close))))))
 
 ; vim:ts=2:sw=2:

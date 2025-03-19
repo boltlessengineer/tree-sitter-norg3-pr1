@@ -9,6 +9,10 @@ const whitespace_or_newline = choice(
     seq(whitespace, newline),
 );
 const word = /[\p{L}\p{N}]+/u;
+const punctuation = /[^\n\r\p{Z}\p{L}\p{N}]/u;
+// escape punctuation or space
+// (excluding newline & word tokens)
+const escape_sequence = /\\[^\n\r\p{L}\p{N}]/u;
 
 const ATTACHED_MODIFIERS = [
     "bold",
@@ -59,6 +63,11 @@ module.exports = grammar({
         $.verbatim_open,
         $.verbatim_close,
 
+        // $.markup_open,
+        // $.markup_close,
+        // $.target_open,
+        // $.target_close,
+
         $.heading_prefix,
         $.table_prefix,
 
@@ -86,11 +95,14 @@ module.exports = grammar({
 
     inline: ($) => [
         $._unclosed_attributes,
+        $._closed_inline_content,
+        $._inline_macro_head,
     ],
 
     supertypes: ($) => [
         $.block,
         $.tag,
+        $.list,
     ],
 
     rules: {
@@ -104,14 +116,17 @@ module.exports = grammar({
             $._blank_line,
             $.paragraph,
             $.tag,
-            $.unordered_list,
-            $.ordered_list,
-            $.quote,
+            $.list,
         ),
         tag: ($) => choice(
             $.carryover_tag,
             $.infirm_tag,
             $.ranged_tag,
+        ),
+        list: ($) => choice(
+            $.unordered_list,
+            $.ordered_list,
+            $.quote,
         ),
         section: ($) => prec.right(seq(
             field("heading", $.heading),
@@ -154,9 +169,7 @@ module.exports = grammar({
                 choice($.block, $._indented_line_start),
                 repeat(choice(
                     $._indented_block,
-                    $.unordered_list,
-                    $.ordered_list,
-                    $.quote,
+                    $.list,
                 )),
             ));
             return rules
@@ -170,55 +183,54 @@ module.exports = grammar({
             ),
         ),
 
+        // prefixs that will break the paragraph:
+        // * heading
+        // = table
+        // - unordered list item
+        // ~ ordered list item
+        // > quote item
+        // / indented block
+        // #carryover
+        // .infirm
+        // @ranged
+
         // TODO: paragraph should NOT include the preceding whitespace.
         // rename this to $._paragraph including preceding whitespace and paragraph inside.
         paragraph: ($) => prec(1, seq(optional(whitespace), $._inline)),
+        _closed_inline_content: ($) => choice(
+            seq($.word, optional($.not_open)),
+            seq($.whitespace, optional($.not_close)),
+            seq($.soft_break, optional($.not_close)),
+            seq($.hard_break, optional($.not_close)),
+            $.escape_sequence,
+            $.punctuation,
+            ...ATTACHED_MODIFIERS.map((k) => [
+                $[k],
+            ]).flat(),
+            $.verbatim,
+            $.link,
+            $.anchor,
+            $.inline_macro,
+        ),
         _closed_inline: ($) => seq(
-            choice(
-                seq($.word, optional($.not_open)),
-                seq($.whitespace, optional($.not_close)),
-                seq($.soft_break, optional($.not_close)),
-                seq($.hard_break, optional($.not_close)),
-                $.escape_sequence,
-                $.punctuation,
-                ...ATTACHED_MODIFIERS.map((k) => [
-                    $[k],
-                ]).flat(),
-                $.verbatim,
-                $.link,
-                $.anchor,
-                $.inline_macro,
-            ),
+            $._closed_inline_content,
             optional($._closed_inline),
         ),
         _inline: ($) => choice(
             prec.right(seq(
-                choice(
-                    seq($.word, optional($.not_open)),
-                    seq($.whitespace, optional($.not_close)),
-                    seq($.soft_break, optional($.not_close)),
-                    seq($.hard_break, optional($.not_close)),
-                    $.escape_sequence,
-                    $.punctuation,
-                    ...ATTACHED_MODIFIERS.map((k) => [
-                        $[k],
-                    ]).flat(),
-                    $.verbatim,
-                    $.link,
-                    $.anchor,
-                    $.inline_macro,
-                ),
+                $._closed_inline_content,
                 optional($._inline),
             )),
+            // don't continue on unclosed markups
             ...ATTACHED_MODIFIERS.map((k) => [
                 $["unclosed_" + k],
-                $["ext_unclosed_" + k],
             ]).flat(),
             $.unclosed_verbatim,
             $.unclosed_link,
             $.unclosed_anchor,
             $.unclosed_inline_macro,
         ),
+        // TODO: change this to repeat1() instead
         _verbatim_inline: ($) => prec.right(2, seq(
             choice(
                 $.word,
@@ -227,6 +239,8 @@ module.exports = grammar({
                 seq($.hard_break, optional($.not_close)),
                 $.escape_sequence,
                 $.punctuation,
+                // specify verbatim punctuations to prevent linkables or inline macros
+                alias(choice("[", "{", "\\"), $.punctuation),
             ),
             optional($._verbatim_inline),
         )),
@@ -236,7 +250,7 @@ module.exports = grammar({
             repeat1('_'),
             repeat1('~'),
             repeat1('`'),
-            /[^\n\r\p{Z}\p{L}\p{N}]/u,
+            punctuation,
         )),
 
         word: (_) => word,
@@ -245,7 +259,7 @@ module.exports = grammar({
             token(seq(optional(whitespace), newline)),
             optional(whitespace),
         )),
-        escape_sequence: (_) => /\\[^\n\r\p{L}\p{N}]/u,
+        escape_sequence: (_) => escape_sequence,
         hard_break: (_) => token(seq("\\", newline)),
         ...ATTACHED_MODIFIERS.reduce((rules, kind) => {
             rules[kind] = (/** @type any */ $) => prec.right(seq(
@@ -254,16 +268,18 @@ module.exports = grammar({
                 $[kind + "_close"],
                 optional($.attributes),
             ));
-            rules["unclosed_" + kind] = (/** @type any */ $) => prec.right(seq(
-                $[kind + "_open"],
-                $._inline,
-            ));
-            rules["ext_unclosed_" + kind] = (/** @type any */ $) => prec.right(seq(
-                $[kind + "_open"],
-                $._closed_inline,
-                $[kind + "_close"],
-                $.unclosed_attributes,
-            ));
+            rules["unclosed_" + kind] = (/** @type any */ $) => choice(
+                prec.right(seq(
+                    $[kind + "_open"],
+                    $._inline,
+                )),
+                prec.right(seq(
+                    $[kind + "_open"],
+                    $._closed_inline,
+                    $[kind + "_close"],
+                    $.unclosed_attributes,
+                )),
+            );
             return rules
         }, {}),
 
@@ -289,27 +305,48 @@ module.exports = grammar({
         target: ($) => prec.right(seq(
             "{",
             $._verbatim_inline,
-            "}",
+            // small trick to prevent bold_open
+            optional(choice($.verbatim_close, $.not_close)),
+            token(prec(9, "}")),
         )),
         unclosed_target: ($) => prec.right(seq(
             "{",
             $._verbatim_inline,
         )),
+
         link: ($) => prec.right(seq(
             field("target", $.target),
-            optional(field("desc", $.markup)),
+            optional(field("description", $.markup)),
+            optional(field("attributes", $.attributes)),
         )),
         unclosed_link: ($) => choice(
-            $.unclosed_target,
-            seq($.target, $.unclosed_markup),
+            field("target", $.unclosed_target),
+            seq(
+                field("target", $.target),
+                field("description", $.unclosed_markup)
+            ),
+            seq(
+                field("target", $.target),
+                optional(field("description", $.markup)),
+                field("attributes", $.unclosed_attributes)
+            ),
         ),
         anchor: ($) => prec.right(seq(
-            field("desc", $.markup),
-            optional(field("target", $.target))
+            field("description", $.markup),
+            optional(field("target", $.target)),
+            optional(field("attributes", $.attributes)),
         )),
         unclosed_anchor: ($) => choice(
-            $.unclosed_markup,
-            seq($.markup, $.unclosed_target),
+            field("description", $.unclosed_markup),
+            seq(
+                field("description", $.markup),
+                field("target", $.unclosed_target)
+            ),
+            seq(
+                field("description", $.markup),
+                optional(field("target", $.target)),
+                field("attributes", $.unclosed_attributes)
+            ),
         ),
 
         identifier: (_) => token(prec(1, repeat1(choice(
@@ -318,52 +355,70 @@ module.exports = grammar({
         )))),
         attributes: ($) => seq(
             $._unclosed_attributes,
-            ")",
+            optional(choice($.verbatim_close, $.not_close)),
+            token(prec(9, ")")),
         ),
         unclosed_attributes: ($) => $._unclosed_attributes,
         _unclosed_attributes: ($) => prec.right(1, seq(
             "(",
             repeat(choice(
-                token(prec(2, ";")),
-                whitespace_or_newline,
+                $.attribute,
+                token(prec(9, ";")),
             )),
-            optional(seq(
-                $.kv_pair,
-                repeat(prec.right(seq(
-                    token(prec(2, ";")),
-                    repeat(choice(whitespace, newline)),
-                    optional($.kv_pair),
+        )),
+        attribute: ($) => prec.right(2, choice(
+            prec.right(repeat1(
+                token(prec(2, choice(whitespace, newline))),
+            )),
+            seq(
+                prec.right(repeat(
+                    token(prec(2, choice(whitespace, newline))),
+                )),
+                field("key", alias($.key, $.value)),
+                optional(seq(
+                    repeat1(token(prec(3, whitespace_or_newline))),
+                    optional(field("value", $.value)),
+                )),
+            ),
+        )),
+        key: ($) => prec.right(repeat1(
+            choice(
+                token(prec(1, choice(
+                    word,
+                    punctuation,
                 ))),
-            )),
+                alias(
+                    token(prec(1, escape_sequence)),
+                    $.escape_sequence
+                ),
+            ),
         )),
-        kv_pair: ($) => prec.right(2, seq(
-            field("key", $.identifier),
-            optional(seq(
-                token(prec(1, whitespace_or_newline)),
-                optional(field("value", alias($._verbatim_inline, $.value))),
-            )),
+        value: ($) => prec.right(repeat1(
+            choice(
+                token(prec(3, choice(
+                    whitespace,
+                    newline,
+                    word,
+                    punctuation,
+                ))),
+                alias(
+                    token(prec(3, escape_sequence)),
+                    $.escape_sequence
+                ),
+            ),
         )),
 
-        // prefixs:
-        // * heading
-        // = table
-        // - unordered list item
-        // ~ ordered list item
-        // > quote item
-        // / indented block
-        // @ranged
-        // .infirm
-        // #carryover
-
-        inline_macro: ($) => prec.right(seq(
+        _inline_macro_head: ($) => seq(
             "\\",
             alias(/[\p{L}\p{N}][\p{L}\p{N}\-]*/u, $.identifier),
+        ),
+        inline_macro: ($) => prec.right(seq(
+            $._inline_macro_head,
             optional($.markup),
             optional($.attributes),
         )),
         unclosed_inline_macro: ($) => seq(
-            "\\",
-            alias(/[\p{L}\p{N}][\p{L}\p{N}\-]*/u, $.identifier),
+            $._inline_macro_head,
             choice(
                 $.unclosed_markup,
                 seq($.markup, $.unclosed_attributes),
