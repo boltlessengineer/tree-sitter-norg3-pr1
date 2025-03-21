@@ -3,3 +3,4 @@ test*.*
 log*.html
 note*.*
 .build/
+target/
