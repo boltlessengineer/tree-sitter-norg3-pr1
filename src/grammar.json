@@ -2304,6 +2304,11 @@
         }
       ]
     },
+    "verbatim_line_param": {
+      "type": "PATTERN",
+      "value": "[^\\n\\r]+",
+      "flags": "u"
+    },
     "ranged_tag": {
       "type": "SEQ",
       "members": [
@@ -2339,13 +2344,12 @@
                   "type": "CHOICE",
                   "members": [
                     {
-                      "type": "ALIAS",
+                      "type": "FIELD",
+                      "name": "param",
                       "content": {
                         "type": "SYMBOL",
-                        "name": "_verbatim_inline"
-                      },
-                      "named": true,
-                      "value": "param"
+                        "name": "verbatim_line_param"
+                      }
                     },
                     {
                       "type": "BLANK"
@@ -2457,13 +2461,12 @@
                   "type": "CHOICE",
                   "members": [
                     {
-                      "type": "ALIAS",
+                      "type": "FIELD",
+                      "name": "param",
                       "content": {
                         "type": "SYMBOL",
-                        "name": "_verbatim_inline"
-                      },
-                      "named": true,
-                      "value": "param"
+                        "name": "verbatim_line_param"
+                      }
                     },
                     {
                       "type": "BLANK"
@@ -2478,25 +2481,32 @@
           ]
         },
         {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "STRING",
-              "value": "\n"
-            },
-            {
-              "type": "STRING",
-              "value": "\r"
-            },
-            {
-              "type": "STRING",
-              "value": "\r\n"
-            },
-            {
-              "type": "STRING",
-              "value": "\u0000"
+          "type": "TOKEN",
+          "content": {
+            "type": "PREC",
+            "value": 1,
+            "content": {
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "\n"
+                },
+                {
+                  "type": "STRING",
+                  "value": "\r"
+                },
+                {
+                  "type": "STRING",
+                  "value": "\r\n"
+                },
+                {
+                  "type": "STRING",
+                  "value": "\u0000"
+                }
+              ]
             }
-          ]
+          }
         }
       ]
     },
@@ -2536,13 +2546,12 @@
                           "type": "CHOICE",
                           "members": [
                             {
-                              "type": "ALIAS",
+                              "type": "FIELD",
+                              "name": "param",
                               "content": {
                                 "type": "SYMBOL",
-                                "name": "_verbatim_inline"
-                              },
-                              "named": true,
-                              "value": "param"
+                                "name": "verbatim_line_param"
+                              }
                             },
                             {
                               "type": "BLANK"
@@ -2569,25 +2578,32 @@
           ]
         },
         {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "STRING",
-              "value": "\n"
-            },
-            {
-              "type": "STRING",
-              "value": "\r"
-            },
-            {
-              "type": "STRING",
-              "value": "\r\n"
-            },
-            {
-              "type": "STRING",
-              "value": "\u0000"
+          "type": "TOKEN",
+          "content": {
+            "type": "PREC",
+            "value": 1,
+            "content": {
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "\n"
+                },
+                {
+                  "type": "STRING",
+                  "value": "\r"
+                },
+                {
+                  "type": "STRING",
+                  "value": "\r\n"
+                },
+                {
+                  "type": "STRING",
+                  "value": "\u0000"
+                }
+              ]
             }
-          ]
+          }
         }
       ]
     }

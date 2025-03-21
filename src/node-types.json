@@ -251,17 +251,17 @@
             "named": true
           }
         ]
+      },
+      "param": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "verbatim_line_param",
+            "named": true
+          }
+        ]
       }
-    },
-    "children": {
-      "multiple": false,
-      "required": false,
-      "types": [
-        {
-          "type": "param",
-          "named": true
-        }
-      ]
     }
   },
   {
@@ -354,17 +354,17 @@
             "named": true
           }
         ]
+      },
+      "param": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "verbatim_line_param",
+            "named": true
+          }
+        ]
       }
-    },
-    "children": {
-      "multiple": false,
-      "required": false,
-      "types": [
-        {
-          "type": "param",
-          "named": true
-        }
-      ]
     }
   },
   {
@@ -769,45 +769,6 @@
     }
   },
   {
-    "type": "param",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "escape_sequence",
-          "named": true
-        },
-        {
-          "type": "flag_not_close",
-          "named": true
-        },
-        {
-          "type": "hard_break",
-          "named": true
-        },
-        {
-          "type": "punctuation",
-          "named": true
-        },
-        {
-          "type": "soft_break",
-          "named": true
-        },
-        {
-          "type": "whitespace",
-          "named": true
-        },
-        {
-          "type": "word",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "quote",
     "named": true,
     "fields": {},
@@ -883,16 +844,22 @@
             "named": true
           }
         ]
+      },
+      "param": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "verbatim_line_param",
+            "named": true
+          }
+        ]
       }
     },
     "children": {
       "multiple": true,
       "required": true,
       "types": [
-        {
-          "type": "param",
-          "named": true
-        },
         {
           "type": "ranged_close",
           "named": true
@@ -2235,6 +2202,10 @@
   },
   {
     "type": "verbatim_close",
+    "named": true
+  },
+  {
+    "type": "verbatim_line_param",
     "named": true
   },
   {

@@ -7,7 +7,7 @@ infirm-00: Basic infirm tag
 (document
   (infirm_tag
     name: (identifier)
-    (param
+    param: (param
       (word))))
 
 ================================================================================

@@ -435,9 +435,10 @@ module.exports = grammar({
             // token(seq("\\", choice(/./, newline))),
         )))),
         verbatim_line: (_) => seq(/[^\n\r]*/u, newline_or_eof),
+        verbatim_line_param: (_) => /[^\n\r]+/u,
         ranged_tag: ($) => seq(
             seq($.ranged_open, field("name", $.identifier)),
-            optional(seq(whitespace, optional(alias($._verbatim_inline, $.param)))),
+            optional(seq(whitespace, optional(field("param", $.verbatim_line_param)))),
             newline,
             repeat(seq(optional($._preceding_verbatim_whitespace), field("line", $.verbatim_line))),
             seq(optional($._preceding_verbatim_whitespace), $.ranged_close),
@@ -445,19 +446,19 @@ module.exports = grammar({
         infirm_tag: ($) => seq(
             $._infirm_tag_prefix,
             field("name", $.identifier),
-            optional(seq(whitespace, optional(alias($._verbatim_inline, $.param)))),
-            newline_or_eof,
+            optional(seq(whitespace, optional(field("param", $.verbatim_line_param)))),
+            token(prec(1, newline_or_eof)),
         ),
         carryover_tag: ($) => seq(
             $._carryover_tag_prefix,
             choice(
                 seq(
                     field("name", $.identifier),
-                    optional(seq(whitespace, optional(alias($._verbatim_inline, $.param)))),
+                    optional(seq(whitespace, optional(field("param", $.verbatim_line_param)))),
                 ),
                 field("attributes", $.attributes),
             ),
-            newline_or_eof,
+            token(prec(1, newline_or_eof)),
         ),
     },
 });
