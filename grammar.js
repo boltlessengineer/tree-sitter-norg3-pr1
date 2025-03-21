@@ -436,14 +436,16 @@ module.exports = grammar({
         )))),
         verbatim_line: (_) => seq(/[^\n\r]*/u, newline_or_eof),
         ranged_tag: ($) => seq(
-            seq($.ranged_open, field("name", $.identifier), newline),
+            seq($.ranged_open, field("name", $.identifier)),
+            optional(seq(whitespace, optional(alias($._verbatim_inline, $.param)))),
+            newline,
             repeat(seq(optional($._preceding_verbatim_whitespace), field("line", $.verbatim_line))),
             seq(optional($._preceding_verbatim_whitespace), $.ranged_close),
         ),
         infirm_tag: ($) => seq(
             $._infirm_tag_prefix,
             field("name", $.identifier),
-            optional(seq(whitespace, $._verbatim_inline)),
+            optional(seq(whitespace, optional(alias($._verbatim_inline, $.param)))),
             newline_or_eof,
         ),
         carryover_tag: ($) => seq(
@@ -451,7 +453,7 @@ module.exports = grammar({
             choice(
                 seq(
                     field("name", $.identifier),
-                    optional(seq(whitespace, $._verbatim_inline)),
+                    optional(seq(whitespace, optional(alias($._verbatim_inline, $.param)))),
                 ),
                 field("attributes", $.attributes),
             ),

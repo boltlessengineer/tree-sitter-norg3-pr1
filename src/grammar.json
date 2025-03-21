@@ -2317,23 +2317,58 @@
                 "type": "SYMBOL",
                 "name": "identifier"
               }
-            },
+            }
+          ]
+        },
+        {
+          "type": "CHOICE",
+          "members": [
             {
-              "type": "CHOICE",
+              "type": "SEQ",
               "members": [
                 {
-                  "type": "STRING",
-                  "value": "\n"
+                  "type": "PATTERN",
+                  "value": "\\p{Zs}+",
+                  "flags": "u"
                 },
                 {
-                  "type": "STRING",
-                  "value": "\r"
-                },
-                {
-                  "type": "STRING",
-                  "value": "\r\n"
+                  "type": "CHOICE",
+                  "members": [
+                    {
+                      "type": "ALIAS",
+                      "content": {
+                        "type": "SYMBOL",
+                        "name": "_verbatim_inline"
+                      },
+                      "named": true,
+                      "value": "param"
+                    },
+                    {
+                      "type": "BLANK"
+                    }
+                  ]
                 }
               ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "STRING",
+              "value": "\n"
+            },
+            {
+              "type": "STRING",
+              "value": "\r"
+            },
+            {
+              "type": "STRING",
+              "value": "\r\n"
             }
           ]
         },
@@ -2415,8 +2450,21 @@
                   "flags": "u"
                 },
                 {
-                  "type": "SYMBOL",
-                  "name": "_verbatim_inline"
+                  "type": "CHOICE",
+                  "members": [
+                    {
+                      "type": "ALIAS",
+                      "content": {
+                        "type": "SYMBOL",
+                        "name": "_verbatim_inline"
+                      },
+                      "named": true,
+                      "value": "param"
+                    },
+                    {
+                      "type": "BLANK"
+                    }
+                  ]
                 }
               ]
             },
@@ -2481,8 +2529,21 @@
                           "flags": "u"
                         },
                         {
-                          "type": "SYMBOL",
-                          "name": "_verbatim_inline"
+                          "type": "CHOICE",
+                          "members": [
+                            {
+                              "type": "ALIAS",
+                              "content": {
+                                "type": "SYMBOL",
+                                "name": "_verbatim_inline"
+                              },
+                              "named": true,
+                              "value": "param"
+                            },
+                            {
+                              "type": "BLANK"
+                            }
+                          ]
                         }
                       ]
                     },
