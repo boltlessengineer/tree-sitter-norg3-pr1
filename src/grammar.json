@@ -2161,14 +2161,18 @@
           "value": "\\"
         },
         {
-          "type": "ALIAS",
+          "type": "FIELD",
+          "name": "name",
           "content": {
-            "type": "PATTERN",
-            "value": "[\\p{L}\\p{N}][\\p{L}\\p{N}\\-]*",
-            "flags": "u"
-          },
-          "named": true,
-          "value": "identifier"
+            "type": "ALIAS",
+            "content": {
+              "type": "PATTERN",
+              "value": "[\\p{L}\\p{N}][\\p{L}\\p{N}\\-]*",
+              "flags": "u"
+            },
+            "named": true,
+            "value": "identifier"
+          }
         }
       ]
     },

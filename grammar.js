@@ -414,7 +414,7 @@ module.exports = grammar({
 
         _inline_macro_head: ($) => seq(
             "\\",
-            alias(/[\p{L}\p{N}][\p{L}\p{N}\-]*/u, $.identifier),
+            field("name", alias(/[\p{L}\p{N}][\p{L}\p{N}\-]*/u, $.identifier)),
         ),
         inline_macro: ($) => prec.right(seq(
             $._inline_macro_head,
