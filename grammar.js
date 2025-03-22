@@ -31,6 +31,13 @@ const ATTACHED_MODIFIERS = [
 //   currently line break at the end of a paragraph is not a requirement
 // - bold inside italic inside bold <- should prevent this.
 //   can't do with grammar, so have to track states from external lexer.
+// - implement link modifier for inline macros / linkables
+// - rename carryover tag with attributes (maybe carryover_attributes)
+// - debugging with https://github.com/tree-sitter/tree-sitter/discussions/1218
+// - list as first item of quote
+//   ```
+//   > - list item
+//   ```
 
 module.exports = grammar({
     name: "norg",
