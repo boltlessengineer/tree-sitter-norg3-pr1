@@ -4,6 +4,10 @@
     "named": true,
     "subtypes": [
       {
+        "type": "horizontal_line",
+        "named": true
+      },
+      {
         "type": "list",
         "named": true
       },
@@ -2142,6 +2146,10 @@
   },
   {
     "type": "heading_prefix",
+    "named": true
+  },
+  {
+    "type": "horizontal_line",
     "named": true
   },
   {

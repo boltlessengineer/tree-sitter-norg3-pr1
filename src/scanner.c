@@ -4,7 +4,7 @@
 
 #include "tree_sitter/parser.h"
 
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 	#define unreachable() fprintf(stderr, "unreachable src/scanner.c:%d\n", __LINE__)

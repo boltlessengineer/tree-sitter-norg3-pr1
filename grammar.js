@@ -38,6 +38,8 @@ const ATTACHED_MODIFIERS = [
 //   ```
 //   > - list item
 //   ```
+// - empty heading should not have a content. so it can work exactly same to
+//   delimiting modifiers
 
 module.exports = grammar({
     name: "norg",
@@ -128,6 +130,7 @@ module.exports = grammar({
 
         block: ($) => choice(
             $._blank_line,
+            $.horizontal_line,
             $.paragraph,
             $.tag,
             $.list,
@@ -206,6 +209,9 @@ module.exports = grammar({
         // #carryover
         // .infirm
         // @ranged
+        // __ (horizontal rule)
+
+        horizontal_line: (_) => token(seq(/__+/, optional(whitespace), newline)),
 
         // TODO: paragraph should NOT include the preceding whitespace.
         // rename this to $._paragraph including preceding whitespace and paragraph inside.
