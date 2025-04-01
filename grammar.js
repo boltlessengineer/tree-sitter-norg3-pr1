@@ -40,6 +40,14 @@ const ATTACHED_MODIFIERS = [
 //   ```
 // - empty heading should not have a content. so it can work exactly same to
 //   delimiting modifiers
+// - allow this:
+//   ```
+//   - list item
+//   /
+//     second paragraph
+//   /
+//   - second list item
+//   ```
 
 module.exports = grammar({
     name: "norg",
@@ -126,6 +134,7 @@ module.exports = grammar({
             $.block,
             $.section,
             $._indented_block,
+            $.empty_heading,
         )),
 
         block: ($) => choice(
@@ -151,19 +160,23 @@ module.exports = grammar({
                 $.block,
                 $.section,
                 $._indented_block,
+                $.empty_heading,
             )),
             optional($._dedent_heading),
         )),
+        empty_heading: ($) => seq(
+            $.heading_prefix,
+            optional(whitespace),
+            newline_or_eof,
+        ),
         heading: ($) => seq(
             $.heading_prefix,
+            whitespace,
             optional(seq(
+                field("attributes", $.attributes),
                 whitespace,
-                optional(seq(
-                    field("attributes", $.attributes),
-                    whitespace,
-                )),
-                optional($.paragraph),
             )),
+            $.paragraph,
             token(prec(1, newline_or_eof)),
         ),
         ...[
@@ -173,15 +186,31 @@ module.exports = grammar({
         ].reduce((rules, kind) => {
             rules[kind] = (/** @type any */ $) => prec.right(seq(
                 $._indent_list,
-                repeat1($[kind + "_item"]),
+                repeat1(choice(
+                    $[kind + "_item"],
+                    $[kind + "_blank_item"]
+                )),
                 $._dedent_list,
             ));
+            rules[kind + "_blank_item"] = (/** @type any */ $) => seq(
+                $[kind + "_prefix"],
+                optional(seq(
+                    whitespace,
+                    field("attributes", $.attributes),
+                )),
+                optional(whitespace),
+                token(prec(1, newline)),
+                repeat(choice(
+                    $._indented_block,
+                    $.list,
+                )),
+            );
             rules[kind + "_item"] = (/** @type any */ $) => prec.right(seq(
                 $[kind + "_prefix"],
-                whitespace,
+                whitespace_or_newline,
                 optional(seq(
                     field("attributes", $.attributes),
-                    whitespace,
+                    whitespace_or_newline,
                 )),
                 optional($.flag_indented_line_start),
                 $.block,
@@ -194,7 +223,7 @@ module.exports = grammar({
         }, {}),
         _indented_block: ($) => seq(
             $.null_list_prefix,
-            whitespace,
+            whitespace_or_newline,
             optional($.flag_indented_line_start),
             $.block,
         ),

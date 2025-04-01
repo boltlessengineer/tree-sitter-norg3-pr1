@@ -307,7 +307,8 @@ static scan_action scan_nonlist_prefix(Scanner *self, const bool *valid_symbols,
                 lex_set_result(DEDENT);
                 return ACCEPT;
             }
-            vec_u32_push(&self->indent_heading, count);
+            if (is_whitespace(lex_next))
+                vec_u32_push(&self->indent_heading, count);
             if (mark_end) lex_mark_end();
             lex_set_result(HEADING);
             return ACCEPT;
@@ -355,7 +356,7 @@ static scan_action scan_nonlist_prefix(Scanner *self, const bool *valid_symbols,
 static scan_action scan_list(Scanner *self, const bool *valid_symbols, const int32_t character) {
     if (
         (character == '/' || character == '-' || character == '~' || character == '>')
-        && (lex_next == character || is_whitespace(lex_next))
+        && (lex_next == character || iswspace(lex_next))
     ) {
         LOG("list item\n");
         size_t count = 1;
@@ -363,7 +364,7 @@ static scan_action scan_list(Scanner *self, const bool *valid_symbols, const int
             lex_advance();
             count++;
         }
-        if (!is_whitespace(lex_next))
+        if (!iswspace(lex_next))
             return FAIL;
         LOG("count = %zu\n", count);
         LOG("sef->indent_list = %d\n", vec_u32_back_or(&self->indent_list, 0));
