@@ -6,7 +6,7 @@ anchor-00: Standalone anchor
 (document
   (paragraph
     (anchor
-      description: (markup
+      markup: (markup
         (word)))))
 
 ================================================================================
@@ -17,7 +17,7 @@ anchor-01: Markup inside anchor description
 (document
   (paragraph
     (anchor
-      description: (markup
+      markup: (markup
         (bold
           (bold_open)
           (word)
@@ -46,7 +46,7 @@ anchor-02: Verbatim > anchor
     (soft_break))
   (paragraph
     (anchor
-      description: (markup
+      markup: (markup
         (verbatim
           (verbatim_open)
           (word)
@@ -61,7 +61,7 @@ anchor-03: free-form verbatim > anchor
 (document
   (paragraph
     (anchor
-      description: (markup
+      markup: (markup
         (verbatim
           (verbatim_open)
           (punctuation)
@@ -78,7 +78,7 @@ anchor-04: reset attached modifier after destination
 (document
   (paragraph
     (unclosed_anchor
-      description: (unclosed_markup
+      markup: (markup
         (bold
           (bold_open)
           (word)
@@ -112,7 +112,7 @@ anchor-06: non-verbatim precedence
 (document
   (paragraph
     (anchor
-      description: (markup
+      markup: (markup
         (word)
         (whitespace)
         (bold
@@ -124,7 +124,7 @@ anchor-06: non-verbatim precedence
     (soft_break))
   (paragraph
     (anchor
-      description: (markup
+      markup: (markup
         (word)
         (whitespace)
         (bold
@@ -146,7 +146,7 @@ anchor-07: verbatim precedence
 (document
   (paragraph
     (anchor
-      description: (markup
+      markup: (markup
         (word)
         (whitespace)
         (verbatim
@@ -159,7 +159,7 @@ anchor-07: verbatim precedence
     (soft_break))
   (paragraph
     (anchor
-      description: (markup
+      markup: (markup
         (word)
         (whitespace)
         (verbatim
@@ -193,7 +193,7 @@ anchor-09: closing modifier without opening modifier (2)
 (document
   (paragraph
     (anchor
-      description: (markup
+      markup: (markup
         (word)
         (whitespace)
         (verbatim

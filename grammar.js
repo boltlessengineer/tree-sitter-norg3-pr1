@@ -344,57 +344,57 @@ module.exports = grammar({
             $._verbatim_inline,
         ),
 
-        markup: ($) => prec.right(seq(
+        _field_markup: ($) => prec.right(seq(
             "[",
-            $._closed_inline,
+            field("markup", alias($._closed_inline, $.markup)),
             "]",
         )),
-        unclosed_markup: ($) => prec.right(seq(
+        _field_markup_unclosed: ($) => prec.right(seq(
             "[",
-            $._inline,
+            field("markup", alias($._inline, $.markup)),
         )),
-        target: ($) => prec.right(seq(
+        _field_target: ($) => prec.right(seq(
             "{",
-            $._verbatim_inline,
+            field("target", alias($._verbatim_inline, $.target)),
             optional($.flag_never_open),
             token(prec(9, "}")),
         )),
-        unclosed_target: ($) => prec.right(seq(
+        _field_target_unclosed: ($) => prec.right(seq(
             "{",
-            $._verbatim_inline,
+            field("target", alias($._verbatim_inline, $.target)),
         )),
 
         link: ($) => prec.right(seq(
-            field("target", $.target),
-            optional(field("description", $.markup)),
+            $._field_target,
+            optional($._field_markup),
             optional(field("attributes", $.attributes)),
         )),
         unclosed_link: ($) => choice(
-            field("target", $.unclosed_target),
+            $._field_target_unclosed,
             seq(
-                field("target", $.target),
-                field("description", $.unclosed_markup)
+                $._field_target,
+                $._field_markup_unclosed,
             ),
             seq(
-                field("target", $.target),
-                optional(field("description", $.markup)),
+                $._field_target,
+                optional($._field_markup),
                 field("attributes", $.unclosed_attributes)
             ),
         ),
         anchor: ($) => prec.right(seq(
-            field("description", $.markup),
-            optional(field("target", $.target)),
+            $._field_markup,
+            optional($._field_target),
             optional(field("attributes", $.attributes)),
         )),
         unclosed_anchor: ($) => choice(
-            field("description", $.unclosed_markup),
+            $._field_markup_unclosed,
             seq(
-                field("description", $.markup),
-                field("target", $.unclosed_target)
+                $._field_markup,
+                $._field_target_unclosed,
             ),
             seq(
-                field("description", $.markup),
-                optional(field("target", $.target)),
+                $._field_markup,
+                optional($._field_target),
                 field("attributes", $.unclosed_attributes)
             ),
         ),
@@ -460,14 +460,17 @@ module.exports = grammar({
         ),
         inline_macro: ($) => prec.right(seq(
             $._inline_macro_head,
-            optional($.markup),
+            optional($._field_markup),
             optional(field("attributes", $.attributes)),
         )),
         unclosed_inline_macro: ($) => seq(
             $._inline_macro_head,
             choice(
-                $.unclosed_markup,
-                seq($.markup, $.unclosed_attributes),
+                $._field_markup_unclosed,
+                seq(
+                    $._field_markup,
+                    $.unclosed_attributes
+                ),
             ),
         ),
 
