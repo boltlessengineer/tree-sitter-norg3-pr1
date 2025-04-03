@@ -1,7 +1,14 @@
-(verbatim_ranged_tag
-  (identifier) @_keyword
+(ranged_tag
+  name: (_) @_keyword
   (#any-of? @_keyword "code" "embed")
   ;; TODO: only accept first argument as @_lang
-  argument: (_) @_lang
-  content: (_) @injection.content
-  (#set-lang-from-info-string! @_lang))
+  param: (_) @injection.language
+  line: (_) @injection.content
+  (#set! injection.combined))
+
+(ranged_tag
+  name: (_) @_keyword
+  (#eq? @_keyword "eval")
+  line: (_) @injection.content
+  (#set! injection.language "janet")
+  (#set! injection.combined))

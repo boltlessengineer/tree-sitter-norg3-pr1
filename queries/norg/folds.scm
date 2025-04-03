@@ -1,6 +1,8 @@
-(verbatim_ranged_tag
-  (identifier) @_name
-  (#eq? @_name "document.meta")
-) @fold
+(ranged_tag
+  name: (_) @_name
+  (#eq? @_name "document.meta")) @fold
 
-(heading) @fold
+(section) @fold
+
+(unordered_list_item) @fold
+(ordered_list_item) @fold
