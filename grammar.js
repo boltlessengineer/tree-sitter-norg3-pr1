@@ -176,7 +176,7 @@ module.exports = grammar({
                 field("attributes", $.attributes),
                 whitespace,
             )),
-            $.paragraph,
+            field("title", $.paragraph),
             token(prec(1, newline_or_eof)),
         ),
         ...[

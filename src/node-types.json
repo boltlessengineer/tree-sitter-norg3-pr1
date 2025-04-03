@@ -357,18 +357,24 @@
             "named": true
           }
         ]
+      },
+      "title": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "paragraph",
+            "named": true
+          }
+        ]
       }
     },
     "children": {
-      "multiple": true,
+      "multiple": false,
       "required": true,
       "types": [
         {
           "type": "heading_prefix",
-          "named": true
-        },
-        {
-          "type": "paragraph",
           "named": true
         }
       ]
