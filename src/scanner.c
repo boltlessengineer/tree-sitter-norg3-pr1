@@ -587,6 +587,8 @@ unsigned tree_sitter_norg_external_scanner_serialize(
     LOG("tree_sitter_norg_external_scanner_serialize\n");
 	struct Scanner* scanner = payload;
 	size_t written = 0;
+    buffer[written++] = (char)scanner->range_column;
+    buffer[written++] = (char)scanner->range_repeat;
 	written += vec_u32_serialize(&scanner->indent_heading, buffer + written);
 	written += vec_u32_serialize(&scanner->indent_list, buffer + written);
 	return written;
@@ -601,6 +603,8 @@ void tree_sitter_norg_external_scanner_deserialize(
 	Scanner* scanner = payload;
 	if (length != 0) {
 		size_t read = 0;
+        scanner->range_column = buffer[read++];
+        scanner->range_repeat = buffer[read++];
 		read += vec_u32_deserialize(&scanner->indent_heading, buffer + read);
 		read += vec_u32_deserialize(&scanner->indent_list, buffer + read);
     }
