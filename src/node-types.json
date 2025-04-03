@@ -260,6 +260,16 @@
           }
         ]
       }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "carryover_tag_prefix",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -286,6 +296,16 @@
           }
         ]
       }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "carryover_tag_prefix",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -414,6 +434,16 @@
           }
         ]
       }
+    },
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "infirm_tag_prefix",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -2198,6 +2228,10 @@
     "named": true
   },
   {
+    "type": "carryover_tag_prefix",
+    "named": true
+  },
+  {
     "type": "escape_sequence",
     "named": true
   },
@@ -2227,6 +2261,10 @@
   },
   {
     "type": "identifier",
+    "named": true
+  },
+  {
+    "type": "infirm_tag_prefix",
     "named": true
   },
   {

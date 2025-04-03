@@ -104,8 +104,8 @@ module.exports = grammar({
         $._dedent_list,
         $.flag_indented_line_start,
 
-        $._infirm_tag_prefix,
-        $._carryover_tag_prefix,
+        $.infirm_tag_prefix,
+        $.carryover_tag_prefix,
         $.ranged_open,
         $.ranged_close,
 
@@ -222,12 +222,12 @@ module.exports = grammar({
             ));
             return rules
         }, {}),
-        _indented_block: ($) => seq(
+        _indented_block: ($) => prec.right(seq(
             $.null_list_prefix,
             whitespace_or_newline,
             optional($.flag_indented_line_start),
-            $.block,
-        ),
+            optional($.block),
+        )),
 
         // prefixs that will break the paragraph:
         // * heading
@@ -490,19 +490,19 @@ module.exports = grammar({
             seq(optional($._preceding_verbatim_whitespace), $.ranged_close),
         ),
         infirm_tag: ($) => seq(
-            $._infirm_tag_prefix,
+            $.infirm_tag_prefix,
             field("name", $.identifier),
             optional(seq(whitespace, optional(field("param", $.verbatim_line_param)))),
             token(prec(1, newline_or_eof)),
         ),
         carryover_tag: ($) => seq(
-            $._carryover_tag_prefix,
+            $.carryover_tag_prefix,
             field("name", $.identifier),
             optional(seq(whitespace, optional(field("param", $.verbatim_line_param)))),
             token(prec(1, newline_or_eof)),
         ),
         carryover_attributes: ($) => seq(
-            $._carryover_tag_prefix,
+            $.carryover_tag_prefix,
             field("attributes", $.attributes),
             token(prec(1, newline_or_eof)),
         ),
