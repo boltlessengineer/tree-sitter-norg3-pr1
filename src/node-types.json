@@ -44,6 +44,10 @@
     "named": true,
     "subtypes": [
       {
+        "type": "carryover_attributes",
+        "named": true
+      },
+      {
         "type": "carryover_tag",
         "named": true
       },
@@ -243,22 +247,28 @@
     }
   },
   {
-    "type": "carryover_tag",
+    "type": "carryover_attributes",
     "named": true,
     "fields": {
       "attributes": {
         "multiple": false,
-        "required": false,
+        "required": true,
         "types": [
           {
             "type": "attributes",
             "named": true
           }
         ]
-      },
+      }
+    }
+  },
+  {
+    "type": "carryover_tag",
+    "named": true,
+    "fields": {
       "name": {
         "multiple": false,
-        "required": false,
+        "required": true,
         "types": [
           {
             "type": "identifier",

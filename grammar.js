@@ -146,6 +146,7 @@ module.exports = grammar({
         ),
         tag: ($) => choice(
             $.carryover_tag,
+            $.carryover_attributes,
             $.infirm_tag,
             $.ranged_tag,
         ),
@@ -496,13 +497,13 @@ module.exports = grammar({
         ),
         carryover_tag: ($) => seq(
             $._carryover_tag_prefix,
-            choice(
-                seq(
-                    field("name", $.identifier),
-                    optional(seq(whitespace, optional(field("param", $.verbatim_line_param)))),
-                ),
-                field("attributes", $.attributes),
-            ),
+            field("name", $.identifier),
+            optional(seq(whitespace, optional(field("param", $.verbatim_line_param)))),
+            token(prec(1, newline_or_eof)),
+        ),
+        carryover_attributes: ($) => seq(
+            $._carryover_tag_prefix,
+            field("attributes", $.attributes),
             token(prec(1, newline_or_eof)),
         ),
     },
