@@ -198,7 +198,6 @@ enum token_type {
     DEDENT,
     INDENT_LIST,
     DEDENT_LIST,
-    FLAG_INDENTED_LINE_START,
 
     INFIRM_TAG_PREFIX,
     CARRYOVER_TAG_PREFIX,
@@ -517,7 +516,7 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
         TRY_SCAN(scan_prefix(self, valid_symbols, character));
 
         return false;
-    } else if (start_column == 0 || valid_symbols[FLAG_INDENTED_LINE_START]) {
+    } else if (start_column == 0) {
         TRY_SCAN(scan_prefix(self, valid_symbols, character));
     }
 

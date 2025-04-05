@@ -102,7 +102,6 @@ module.exports = grammar({
         $._dedent_heading,
         $._indent_list,
         $._dedent_list,
-        $.flag_indented_line_start,
 
         $.infirm_tag_prefix,
         $.carryover_tag_prefix,
@@ -213,7 +212,6 @@ module.exports = grammar({
                     field("attributes", $.attributes),
                     whitespace_or_newline,
                 )),
-                optional($.flag_indented_line_start),
                 $.block,
                 repeat(choice(
                     $._indented_block,
@@ -225,7 +223,6 @@ module.exports = grammar({
         _indented_block: ($) => prec.right(seq(
             $.null_list_prefix,
             whitespace_or_newline,
-            optional($.flag_indented_line_start),
             optional($.block),
         )),
 

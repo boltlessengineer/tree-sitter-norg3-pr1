@@ -326,10 +326,6 @@
           "named": true
         },
         {
-          "type": "flag_indented_line_start",
-          "named": true
-        },
-        {
           "type": "null_list_prefix",
           "named": true
         },
@@ -772,10 +768,6 @@
           "named": true
         },
         {
-          "type": "flag_indented_line_start",
-          "named": true
-        },
-        {
           "type": "null_list_prefix",
           "named": true
         },
@@ -807,10 +799,6 @@
       "types": [
         {
           "type": "block",
-          "named": true
-        },
-        {
-          "type": "flag_indented_line_start",
           "named": true
         },
         {
@@ -974,10 +962,6 @@
           "named": true
         },
         {
-          "type": "flag_indented_line_start",
-          "named": true
-        },
-        {
           "type": "null_list_prefix",
           "named": true
         },
@@ -1009,10 +993,6 @@
       "types": [
         {
           "type": "block",
-          "named": true
-        },
-        {
-          "type": "flag_indented_line_start",
           "named": true
         },
         {
@@ -1101,10 +1081,6 @@
         },
         {
           "type": "empty_heading",
-          "named": true
-        },
-        {
-          "type": "flag_indented_line_start",
           "named": true
         },
         {
@@ -2055,10 +2031,6 @@
           "named": true
         },
         {
-          "type": "flag_indented_line_start",
-          "named": true
-        },
-        {
           "type": "null_list_prefix",
           "named": true
         },
@@ -2090,10 +2062,6 @@
       "types": [
         {
           "type": "block",
-          "named": true
-        },
-        {
-          "type": "flag_indented_line_start",
           "named": true
         },
         {
@@ -2233,10 +2201,6 @@
   },
   {
     "type": "escape_sequence",
-    "named": true
-  },
-  {
-    "type": "flag_indented_line_start",
     "named": true
   },
   {
