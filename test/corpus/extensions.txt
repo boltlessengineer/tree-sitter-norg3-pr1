@@ -213,4 +213,4 @@ ext-06: Semicolon after auto-semicolon by newline
       title: (paragraph
         (word)))))
 
-; vim:ts=2:sw=2:
+; vim:ts=2:sw=2:nf+=unsigned:

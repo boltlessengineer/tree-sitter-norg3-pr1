@@ -56,3 +56,5 @@ text
     name: (identifier)
     line: (verbatim_line)
     (ranged_close)))
+
+; vim:ts=2:sw=2:nf+=unsigned:

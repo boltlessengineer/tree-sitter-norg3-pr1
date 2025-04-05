@@ -6,9 +6,9 @@ infirm-00: Basic infirm tag
 ;; TODO: fix argument token
 (document
   (infirm_tag
+    (infirm_tag_prefix)
     name: (identifier)
-    param: (param
-      (word))))
+    param: (verbatim_line_param)))
 
 ================================================================================
 infirm-01: Not infirm tag
@@ -21,4 +21,4 @@ infirm-01: Not infirm tag
     (punctuation)
     (punctuation)))
 
-; vim:ts=2:sw=2:
+; vim:ts=2:sw=2:nf+=unsigned:

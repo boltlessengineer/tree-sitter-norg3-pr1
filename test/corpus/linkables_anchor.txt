@@ -201,4 +201,4 @@ anchor-09: closing modifier without opening modifier (2)
           (punctuation)
           (verbatim_close))))))
 
-; vim:ts=2:sw=2:
+; vim:ts=2:sw=2:nf+=unsigned:

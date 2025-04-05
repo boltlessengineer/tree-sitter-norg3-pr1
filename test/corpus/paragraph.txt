@@ -206,4 +206,4 @@ word word
     (soft_break)
     (punctuation)))
 
-; vim:ts=2:sw=2:
+; vim:ts=2:sw=2:nf+=unsigned:

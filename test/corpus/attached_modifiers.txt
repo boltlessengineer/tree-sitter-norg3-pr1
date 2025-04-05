@@ -573,4 +573,4 @@ att-25: higher dynamic precedence level to verbatim
 ;; `word:*word*
 ;; *word /word *|word|*
 
-; vim:ts=2:sw=2:
+; vim:ts=2:sw=2:nf+=unsigned:

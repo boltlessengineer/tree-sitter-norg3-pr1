@@ -167,3 +167,5 @@ word :*word*
       (bold_close))
     (whitespace)
     (word)))
+
+; vim:ts=2:sw=2:nf+=unsigned:
