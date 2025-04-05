@@ -199,6 +199,8 @@ enum token_type {
     INDENT_LIST,
     DEDENT_LIST,
 
+    FLAG_LIST_CONTENT,
+
     INFIRM_TAG_PREFIX,
     CARRYOVER_TAG_PREFIX,
     RANGED_OPEN,
@@ -400,7 +402,7 @@ static scan_action scan_list(Scanner *self, const bool *valid_symbols, const int
 }
 
 static scan_action scan_prefix(Scanner *self, const bool *valid_symbols, const int32_t character) {
-    if (valid_symbols[DEDENT_LIST]) {
+    if (valid_symbols[DEDENT_LIST] && !valid_symbols[FLAG_LIST_CONTENT]) {
         const scan_action action = scan_nonlist_prefix(self, valid_symbols, character, false);
         switch (action) {
             case ACCEPT:
@@ -518,6 +520,8 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
         return false;
     } else if (start_column == 0) {
         TRY_SCAN(scan_prefix(self, valid_symbols, character));
+    } else if (valid_symbols[FLAG_LIST_CONTENT]) {
+        TRY_SCAN(scan_nonlist_prefix(self, valid_symbols, character, true));
     }
 
     // scan attached modifier

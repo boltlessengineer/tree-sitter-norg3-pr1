@@ -80,6 +80,93 @@ list-00: hard test
       (paragraph
         (word)))))
 
+================================================================================
+list-01: second list item content (compact)
+================================================================================
+- list item
+/ @code
+  @end
+--------------------------------------------------------------------------------
+(document
+  (unordered_list
+    (unordered_list_item
+      (unordered_list_prefix)
+      (paragraph
+        (word)
+        (whitespace)
+        (word)
+        (soft_break))
+      (null_list_prefix)
+      (ranged_tag
+        (ranged_open)
+        name: (identifier)
+        (ranged_close)))))
+
+================================================================================
+list-02: second list item content (spreaded)
+================================================================================
+- list item
+/
+  @code
+  @end
+--------------------------------------------------------------------------------
+(document
+  (unordered_list
+    (unordered_list_item
+      (unordered_list_prefix)
+      (paragraph
+        (word)
+        (whitespace)
+        (word)
+        (soft_break))
+      (null_list_prefix)
+      (ranged_tag
+        (ranged_open)
+        name: (identifier)
+        (ranged_close)))))
+
+================================================================================
+list-03: second list item content (spreaded, paragraph)
+================================================================================
+- list item
+/
+  paragraph
+--------------------------------------------------------------------------------
+(document
+  (unordered_list
+    (unordered_list_item
+      (unordered_list_prefix)
+      (paragraph
+        (word)
+        (whitespace)
+        (word)
+        (soft_break))
+      (null_list_prefix)
+      (paragraph
+        (word)))))
+
+================================================================================
+list-04: second list item with list prefix
+================================================================================
+- list item
+/ -- paragraph
+--------------------------------------------------------------------------------
+(document
+  (unordered_list
+    (unordered_list_item
+      (unordered_list_prefix)
+      (paragraph
+        (word)
+        (whitespace)
+        (word)
+        (soft_break))
+      (null_list_prefix)
+      (paragraph
+        (punctuation)
+        (punctuation)
+        (whitespace)
+        (word)))))
+
 ; TODO: add more tests
 
-; vim:ts=2:sw=2:
+; vim:ts=2:sw=2:nf+=unsigned:

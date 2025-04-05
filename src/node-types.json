@@ -40,6 +40,24 @@
     ]
   },
   {
+    "type": "list_item_content",
+    "named": true,
+    "subtypes": [
+      {
+        "type": "horizontal_line",
+        "named": true
+      },
+      {
+        "type": "paragraph",
+        "named": true
+      },
+      {
+        "type": "tag",
+        "named": true
+      }
+    ]
+  },
+  {
     "type": "tag",
     "named": true,
     "subtypes": [
@@ -323,6 +341,14 @@
         },
         {
           "type": "empty_heading",
+          "named": true
+        },
+        {
+          "type": "flag_list_content",
+          "named": true
+        },
+        {
+          "type": "list_item_content",
           "named": true
         },
         {
@@ -764,7 +790,15 @@
       "required": true,
       "types": [
         {
-          "type": "block",
+          "type": "flag_list_content",
+          "named": true
+        },
+        {
+          "type": "list",
+          "named": true
+        },
+        {
+          "type": "list_item_content",
           "named": true
         },
         {
@@ -798,7 +832,15 @@
       "required": true,
       "types": [
         {
-          "type": "block",
+          "type": "flag_list_content",
+          "named": true
+        },
+        {
+          "type": "list",
+          "named": true
+        },
+        {
+          "type": "list_item_content",
           "named": true
         },
         {
@@ -958,7 +1000,15 @@
       "required": true,
       "types": [
         {
-          "type": "block",
+          "type": "flag_list_content",
+          "named": true
+        },
+        {
+          "type": "list",
+          "named": true
+        },
+        {
+          "type": "list_item_content",
           "named": true
         },
         {
@@ -992,7 +1042,15 @@
       "required": true,
       "types": [
         {
-          "type": "block",
+          "type": "flag_list_content",
+          "named": true
+        },
+        {
+          "type": "list",
+          "named": true
+        },
+        {
+          "type": "list_item_content",
           "named": true
         },
         {
@@ -1081,6 +1139,14 @@
         },
         {
           "type": "empty_heading",
+          "named": true
+        },
+        {
+          "type": "flag_list_content",
+          "named": true
+        },
+        {
+          "type": "list_item_content",
           "named": true
         },
         {
@@ -2027,7 +2093,15 @@
       "required": true,
       "types": [
         {
-          "type": "block",
+          "type": "flag_list_content",
+          "named": true
+        },
+        {
+          "type": "list",
+          "named": true
+        },
+        {
+          "type": "list_item_content",
           "named": true
         },
         {
@@ -2061,7 +2135,15 @@
       "required": true,
       "types": [
         {
-          "type": "block",
+          "type": "flag_list_content",
+          "named": true
+        },
+        {
+          "type": "list",
+          "named": true
+        },
+        {
+          "type": "list_item_content",
           "named": true
         },
         {
@@ -2201,6 +2283,10 @@
   },
   {
     "type": "escape_sequence",
+    "named": true
+  },
+  {
+    "type": "flag_list_content",
     "named": true
   },
   {

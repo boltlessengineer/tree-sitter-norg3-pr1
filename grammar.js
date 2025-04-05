@@ -48,6 +48,7 @@ const ATTACHED_MODIFIERS = [
 //   /
 //   - second list item
 //   ```
+// TODO: don't parse `@end` as ranged tag opener
 
 module.exports = grammar({
     name: "norg",
@@ -103,6 +104,8 @@ module.exports = grammar({
         $._indent_list,
         $._dedent_list,
 
+        $.flag_list_content,
+
         $.infirm_tag_prefix,
         $.carryover_tag_prefix,
         $.ranged_open,
@@ -124,6 +127,7 @@ module.exports = grammar({
 
     supertypes: ($) => [
         $.block,
+        $.list_item_content,
         $.tag,
         $.list,
     ],
@@ -142,6 +146,11 @@ module.exports = grammar({
             $.paragraph,
             $.tag,
             $.list,
+        ),
+        list_item_content: ($) => choice(
+            $.horizontal_line,
+            $.paragraph,
+            $.tag,
         ),
         tag: ($) => choice(
             $.carryover_tag,
@@ -162,6 +171,7 @@ module.exports = grammar({
                 $._indented_block,
                 $.empty_heading,
             )),
+            // NOTE: dedent_heading is optional because a section can only be ended with heading_prefix
             optional($._dedent_heading),
         )),
         empty_heading: ($) => seq(
@@ -190,6 +200,7 @@ module.exports = grammar({
                     $[kind + "_item"],
                     $[kind + "_blank_item"]
                 )),
+                // NOTE: dedent_list is a requirement because blank line can also end the list
                 $._dedent_list,
             ));
             rules[kind + "_blank_item"] = (/** @type any */ $) => seq(
@@ -199,7 +210,7 @@ module.exports = grammar({
                     field("attributes", $.attributes),
                 )),
                 optional(whitespace),
-                token(prec(1, newline)),
+                newline,
                 repeat(choice(
                     $._indented_block,
                     $.list,
@@ -207,12 +218,14 @@ module.exports = grammar({
             );
             rules[kind + "_item"] = (/** @type any */ $) => prec.right(seq(
                 $[kind + "_prefix"],
-                whitespace_or_newline,
                 optional(seq(
+                    whitespace,
                     field("attributes", $.attributes),
-                    whitespace_or_newline,
                 )),
-                $.block,
+                choice(whitespace, newline),
+                // TODO: try replace this flag with `valid[DEDENT_LIST] && !valid[LIST_PREFIX]`
+                optional($.flag_list_content),
+                $.list_item_content,
                 repeat(choice(
                     $._indented_block,
                     $.list,
@@ -223,7 +236,8 @@ module.exports = grammar({
         _indented_block: ($) => prec.right(seq(
             $.null_list_prefix,
             whitespace_or_newline,
-            optional($.block),
+            optional($.flag_list_content),
+            optional($.list_item_content),
         )),
 
         // prefixs that will break the paragraph:
@@ -242,6 +256,8 @@ module.exports = grammar({
 
         // TODO: paragraph should NOT include the preceding whitespace.
         // rename this to $._paragraph including preceding whitespace and paragraph inside.
+        // TODO: implement $.paragraph_break from external scanner
+        // on eol character, try parse prefix/blank-line,
         paragraph: ($) => prec(1, seq(optional(whitespace), $._inline)),
         _closed_inline_content: ($) => choice(
             seq($.word, optional($.flag_not_open)),
@@ -276,7 +292,6 @@ module.exports = grammar({
             $.unclosed_anchor,
             $.unclosed_inline_macro,
         ),
-        // TODO: change this to repeat1() instead
         _verbatim_inline: ($) => prec.right(2, seq(
             choice(
                 $.word,
