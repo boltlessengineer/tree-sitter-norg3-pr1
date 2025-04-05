@@ -16,22 +16,22 @@ paragraph
   (section
     heading: (heading
       (heading_prefix)
-      (paragraph
+      title: (paragraph
         (word)))
     (section
       heading: (heading
         (heading_prefix)
-        (paragraph
+        title: (paragraph
           (word)))
       (section
         heading: (heading
           (heading_prefix)
-          (paragraph
+          title: (paragraph
             (word))))))
   (section
     heading: (heading
       (heading_prefix)
-      (paragraph
+      title: (paragraph
         (word)))
     (paragraph
       (word)
@@ -39,12 +39,12 @@ paragraph
     (section
       heading: (heading
         (heading_prefix)
-        (paragraph
+        title: (paragraph
           (word))))
     (section
       heading: (heading
         (heading_prefix)
-        (paragraph
+        title: (paragraph
           (word))))))
 
 ================================================================================
@@ -60,7 +60,7 @@ paragraph
   (section
     heading: (heading
       (heading_prefix)
-      (paragraph
+      title: (paragraph
         (word)))))
 
 ; TODO: add more tests

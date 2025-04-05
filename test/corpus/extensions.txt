@@ -55,7 +55,7 @@ ext-02: Attributes in structural detached modifier
         (attribute
           key: (value)
           value: (value)))
-      (paragraph
+      title: (paragraph
         (word))))
   (section
     heading: (heading
@@ -68,7 +68,7 @@ ext-02: Attributes in structural detached modifier
         (attribute
           key: (value)
           value: (value)))
-      (paragraph
+      title: (paragraph
         (word)))))
 
 ================================================================================
@@ -128,7 +128,7 @@ ext-04: Trailing whitespace
         (attribute
           key: (value)
           value: (value)))
-      (paragraph
+      title: (paragraph
         (word))))
   (section
     heading: (heading
@@ -137,7 +137,7 @@ ext-04: Trailing whitespace
         (attribute
           key: (value)
           value: (value)))
-      (paragraph
+      title: (paragraph
         (word)))))
 
 ================================================================================
@@ -158,7 +158,7 @@ ext-05: Ignoring whitespaces
       attributes: (attributes
         (attribute
           key: (value)))
-      (paragraph
+      title: (paragraph
         (word))))
   (section
     heading: (heading
@@ -166,7 +166,7 @@ ext-05: Ignoring whitespaces
       attributes: (attributes
         (attribute
           key: (value)))
-      (paragraph
+      title: (paragraph
         (word))))
   (section
     heading: (heading
@@ -174,7 +174,7 @@ ext-05: Ignoring whitespaces
       attributes: (attributes
         (attribute
           key: (value)))
-      (paragraph
+      title: (paragraph
         (word))))
   (section
     heading: (heading
@@ -182,7 +182,7 @@ ext-05: Ignoring whitespaces
       attributes: (attributes
         (attribute
           key: (value)))
-      (paragraph
+      title: (paragraph
         (word))))
   (section
     heading: (heading
@@ -191,7 +191,7 @@ ext-05: Ignoring whitespaces
         (attribute
           key: (value))
         (attribute))
-      (paragraph
+      title: (paragraph
         (word)))))
 
 ================================================================================
@@ -210,7 +210,7 @@ ext-06: Semicolon after auto-semicolon by newline
           key: (value))
         (attribute
           key: (value)))
-      (paragraph
+      title: (paragraph
         (word)))))
 
 ; vim:ts=2:sw=2:
