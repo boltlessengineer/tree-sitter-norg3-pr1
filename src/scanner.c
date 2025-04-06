@@ -3,22 +3,17 @@
 #include <wctype.h>
 
 #include "tree_sitter/parser.h"
+#include "tree_sitter/array.h"
 
 // #define DEBUG
 
 #ifdef DEBUG
 	#define unreachable() fprintf(stderr, "unreachable src/scanner.c:%d\n", __LINE__)
-	#define assert(a, ...) \
-		if (!(a)) {\
-			fprintf(stderr, __VA_ARGS__);\
-			exit(EXIT_FAILURE);\
-		}
     #define LOG(...) \
             printf("log[%d]: ", __LINE__);\
             printf(__VA_ARGS__);
 #else
 	#define unreachable() while (false);
-	#define assert(a, ...) while (false);
     #define LOG(...) while (false);
 #endif
 
@@ -40,101 +35,35 @@
 #define lex_skip() \
 	self->lexer->advance(self->lexer, true)
 
-// vec<u32> ////////////////////////////////////////////////////////////////////
-typedef struct vec_u32 vec_u32;
-struct vec_u32 {
-	size_t cap;
-	size_t len;
-	uint32_t* vec;
-};
-static struct vec_u32 vec_u32_new() {
-	return (struct vec_u32) {.cap = 0, .len = 0, .vec = NULL};
-}
-static void vec_u32_drop(struct vec_u32 self) {
-	if (self.vec != NULL) {
-		free(self.vec);
-	}
-}
-static void vec_u32_clear(struct vec_u32* self) {
-    if (self->vec != NULL) {
-        free(self->vec);
+static size_t _serialize__prim_array(Array *self, size_t element_size, char* buffer) {
+    size_t written = 0;
+    memcpy(buffer, &self->size, sizeof self->size);
+    written += sizeof self->size;
+    if (self->size > 0) {
+        const size_t mem_size = self->size * element_size;
+        memcpy(buffer + written, self->contents, mem_size);
+        written += mem_size;
     }
-    self->cap = 0;
-    self->len = 0;
-    self->vec = NULL;
+    return written;
 }
-static void vec_u32_push(struct vec_u32* self, uint32_t value) {
-	assert(self != NULL, "vec_u32_push");
-	if (self->len + 1 > self->cap) {
-		self->cap = self->len + 8;
-		self->vec = realloc(self->vec, sizeof(uint32_t) * self->cap);
-        assert(self->vec != NULL, "vec_u32_push: malloc failed\n");
-	}
-	self->vec[self->len++] = value;
-}
-static uint32_t vec_u32_pop(struct vec_u32* self) {
-	assert(self != NULL, "vec_u32_pop");
-    assert(!(self->len < 1), "vec_u32_pop: empty vec\n");
-	return self->vec[--self->len];
-}
-static uint32_t vec_u32_back(struct vec_u32* self) {
-	assert(self != NULL, "vec_u32_back");
-    assert(!(self->len < 1), "vec_u32_back: empty vec\n");
-	return self->vec[self->len - 1];
-}
-static uint32_t vec_u32_back_or(struct vec_u32* self, uint32_t fallback) {
-	assert(self != NULL, "vec_u32_back_or");
-	if (self->len < 1) {
-        return fallback;
-	}
-	return self->vec[self->len - 1];
-}
-static bool vec_u32_empty(struct vec_u32* self) {
-    return (self->len == 0);
-}
-static void vec_u32_pop_until(struct vec_u32* self, uint32_t value) {
-    while (true) {
-        if (vec_u32_empty(self)) return;
-        if (vec_u32_pop(self) == value) return;
+static size_t _deserialize__prim_array(Array *self, size_t element_size, const char* buffer) {
+    size_t read = 0;
+    memcpy(&self->size, buffer, sizeof self->size);
+    read += sizeof self->size;
+    array_reserve(self, self->size);
+    if (self->size > 0) {
+        const size_t mem_size = self->size * element_size;
+        memcpy(self->contents, buffer + read, mem_size);
+        read += mem_size;
     }
+    return read;
 }
-static bool vec_u32_has(struct vec_u32* self, const uint32_t kind) {
-	assert(self != NULL, "vec_u32_has");
-    for (size_t i = 0; i < self->len; i++) {
-        if (self->vec[i] == kind) {
-            return true;
-        }
-    }
-    return false;
-}
-static size_t vec_u32_serialize(struct vec_u32* self, char* buffer) {
-	assert(self != NULL, "vec_u32_serialize");
-	size_t written = 0;
-	memcpy(buffer, &self->len, sizeof self->len);
-	written += sizeof self->len;
-	if (self->len > 0) {
-		memcpy(buffer + written, self->vec, self->len * sizeof(uint32_t));
-		written += self->len * sizeof(uint32_t);
-	}
-	return written;
-}
-static size_t vec_u32_deserialize(struct vec_u32* self, const char* buffer) {
-	assert(self != NULL, "vec_u32_deserialize");
-	size_t read = 0;
-	memcpy(&self->len, buffer, sizeof self->len);
-	read += sizeof self->len;
-	if (self->len > self->cap) {
-		self->cap = self->len;
-		self->vec = realloc(self->vec, sizeof(uint32_t) * self->cap);
-        assert(self->vec != NULL, "vec_u32_deserialize: malloc failed\n");
-	}
-	if (self->len > 0) {
-		memcpy(self->vec, buffer + read, self->len * sizeof *self->vec);
-		read += self->len * sizeof *self->vec;
-	}
-	return read;
-}
-//////////////////////////////////////////////////////////////////// vec<u32> //
+/// serialize array of primitive types
+#define serialize_prim_array(self, buffer) \
+    _serialize__prim_array((Array *)(self), array_elem_size(self), buffer)
+/// deserialize array of primitive types
+#define deserialize_prim_array(self, buffer) \
+    _deserialize__prim_array((Array *)(self), array_elem_size(self), buffer)
 
 typedef struct Scanner Scanner;
 struct Scanner {
@@ -143,10 +72,11 @@ struct Scanner {
     uint32_t range_column;
     /// prefix count of ranged tag
     uint32_t range_repeat;
+
     /// heading indent stack
-    vec_u32 indent_heading;
+    Array(uint32_t) indent_heading;
     /// list indent stack
-    vec_u32 indent_list;
+    Array(uint32_t) indent_list;
 };
 
 typedef enum token_type token_type;
@@ -302,14 +232,18 @@ static scan_action scan_nonlist_prefix(Scanner *self, const bool *valid_symbols,
             lex_advance();
             count++;
         }
+        uint32_t last_heading_level = 0;
+        if (self->indent_heading.size > 0) {
+            last_heading_level = *array_back(&self->indent_heading);
+        }
         if (iswspace(lex_next)) {
-            if (valid_symbols[DEDENT] && count <= vec_u32_back_or(&self->indent_heading, 0)) {
-                vec_u32_pop(&self->indent_heading);
+            if (valid_symbols[DEDENT] && count <= last_heading_level) {
+                array_pop(&self->indent_heading);
                 lex_set_result(DEDENT);
                 return ACCEPT;
             }
             if (is_whitespace(lex_next))
-                vec_u32_push(&self->indent_heading, count);
+                array_push(&self->indent_heading, count);
             if (mark_end) lex_mark_end();
             lex_set_result(HEADING);
             return ACCEPT;
@@ -367,21 +301,25 @@ static scan_action scan_list(Scanner *self, const bool *valid_symbols, const int
         }
         if (!iswspace(lex_next))
             return FAIL;
+        uint32_t last_list_level = 0;
+        if (self->indent_list.size > 0) {
+            last_list_level = *array_back(&self->indent_list);
+        }
         LOG("count = %zu\n", count);
-        LOG("sef->indent_list = %d\n", vec_u32_back_or(&self->indent_list, 0));
+        LOG("sef->indent_list = %d\n", last_list_level);
         LOG("check indent_list\n");
         if (
             valid_symbols[INDENT_LIST]
             && character != '/'
-            && count > vec_u32_back_or(&self->indent_list, 0)
+            && count > last_list_level
         ) {
-            vec_u32_push(&self->indent_list, count);
+            array_push(&self->indent_list, count);
             lex_set_result(INDENT_LIST);
             return ACCEPT;
         }
         LOG("check dedent_list\n");
-        if (valid_symbols[DEDENT_LIST] && count < vec_u32_back_or(&self->indent_list, 0)) {
-            vec_u32_pop(&self->indent_list);
+        if (valid_symbols[DEDENT_LIST] && count < last_list_level) {
+            array_pop(&self->indent_list);
             lex_set_result(DEDENT_LIST);
             return ACCEPT;
         }
@@ -392,7 +330,7 @@ static scan_action scan_list(Scanner *self, const bool *valid_symbols, const int
             lex_set_result(prefix_token);
             return ACCEPT;
         } else if (prefix_token && valid_symbols[DEDENT_LIST]) { // for "- asdf\n~ asdf"
-            vec_u32_pop(&self->indent_list);
+            array_pop(&self->indent_list);
             lex_set_result(DEDENT_LIST);
             return ACCEPT;
         }
@@ -406,7 +344,7 @@ static scan_action scan_prefix(Scanner *self, const bool *valid_symbols, const i
         const scan_action action = scan_nonlist_prefix(self, valid_symbols, character, false);
         switch (action) {
             case ACCEPT:
-                vec_u32_pop(&self->indent_list);
+                array_pop(&self->indent_list);
                 lex_set_result(DEDENT_LIST);
                 return ACCEPT;
             case FAIL:
@@ -490,7 +428,7 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
     if (start_column == 0 && is_newline(character)) {
         LOG("blank line detected\n");
         if (valid_symbols[DEDENT_LIST]) {
-            vec_u32_pop(&self->indent_list);
+            array_pop(&self->indent_list);
             lex_set_result(DEDENT_LIST);
             return true;
         }
@@ -569,17 +507,17 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
 
 void *tree_sitter_norg_external_scanner_create() {
     LOG("tree_sitter_norg_external_scanner_create\n");
-	Scanner* self = malloc(sizeof(Scanner));
-    self->indent_heading = vec_u32_new();
-    self->indent_list = vec_u32_new();
+	Scanner *self = calloc(1, sizeof(Scanner));
+    array_init(&self->indent_heading);
+    array_init(&self->indent_list);
     return self;
 }
 
 void tree_sitter_norg_external_scanner_destroy(void *payload) {
     LOG("tree_sitter_norg_external_scanner_destroy\n");
-	struct Scanner* scanner = payload;
-	vec_u32_drop(scanner->indent_heading);
-	vec_u32_drop(scanner->indent_list);
+	Scanner *scanner = payload;
+    array_delete(&scanner->indent_heading);
+    array_delete(&scanner->indent_list);
 	free(scanner);
 }
 
@@ -588,12 +526,12 @@ unsigned tree_sitter_norg_external_scanner_serialize(
 	char *buffer
 ) {
     LOG("tree_sitter_norg_external_scanner_serialize\n");
-	struct Scanner* scanner = payload;
+	Scanner *scanner = payload;
 	size_t written = 0;
     buffer[written++] = (char)scanner->range_column;
     buffer[written++] = (char)scanner->range_repeat;
-	written += vec_u32_serialize(&scanner->indent_heading, buffer + written);
-	written += vec_u32_serialize(&scanner->indent_list, buffer + written);
+    written += serialize_prim_array(&scanner->indent_heading, buffer + written);
+    written += serialize_prim_array(&scanner->indent_list, buffer + written);
 	return written;
 }
 
@@ -603,13 +541,13 @@ void tree_sitter_norg_external_scanner_deserialize(
 	unsigned length
 ) {
     LOG("tree_sitter_norg_external_scanner_deserialize\n");
-	Scanner* scanner = payload;
+	Scanner *scanner = payload;
 	if (length != 0) {
 		size_t read = 0;
         scanner->range_column = buffer[read++];
         scanner->range_repeat = buffer[read++];
-		read += vec_u32_deserialize(&scanner->indent_heading, buffer + read);
-		read += vec_u32_deserialize(&scanner->indent_list, buffer + read);
+        read += deserialize_prim_array(&scanner->indent_heading, buffer + read);
+        read += deserialize_prim_array(&scanner->indent_list, buffer + read);
     }
 }
 

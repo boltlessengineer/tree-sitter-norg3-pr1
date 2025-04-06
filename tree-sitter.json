@@ -1,0 +1,40 @@
+{
+  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/config.schema.json",
+  "grammars": [
+    {
+      "name": "norg",
+      "camelcase": "Norg",
+      "title": "Norg",
+      "scope": "source.norg",
+      "file-types": [
+        "norg"
+      ],
+      "injection-regex": "^norg$",
+      "class-name": "TreeSitterNorg"
+    }
+  ],
+  "metadata": {
+    "version": "0.1.0",
+    "license": "MIT",
+    "description": "tree-sitter parser for unofficial norg spec",
+    "authors": [
+      {
+        "name": "boltlessengineer",
+        "email": "boltlessengineer@proton.me",
+        "url": "https://boltless.me/"
+      }
+    ],
+    "links": {
+      "repository": "https://github.com/boltlessengineer/tree-sitter-norg3-pr1"
+    }
+  },
+  "bindings": {
+    "c": true,
+    "go": true,
+    "node": true,
+    "python": true,
+    "rust": true,
+    "swift": true,
+    "zig": false
+  }
+}

@@ -6,7 +6,7 @@
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #endif
 
-#define LANGUAGE_VERSION 14
+#define LANGUAGE_VERSION 15
 #define STATE_COUNT 2827
 #define LARGE_STATE_COUNT 2
 #define SYMBOL_COUNT 134
@@ -17,7 +17,7 @@
 #define MAX_ALIAS_SEQUENCE_LENGTH 8
 #define MAX_RESERVED_WORD_SET_SIZE 0
 #define PRODUCTION_ID_COUNT 33
-#define SUPERTYPE_COUNT 0
+#define SUPERTYPE_COUNT 4
 
 enum ts_symbol_identifiers {
   aux_sym_empty_heading_token1 = 1,
@@ -3989,6 +3989,41 @@ static const TSStateId ts_primary_state_ids[STATE_COUNT] = {
   [2826] = 2438,
 };
 
+static const TSSymbol ts_supertype_symbols[SUPERTYPE_COUNT] = {
+  sym_block,
+  sym_list,
+  sym_list_item_content,
+  sym_tag,
+};
+
+static const TSMapSlice ts_supertype_map_slices[] = {
+  [sym_block] = {.index = 0, .length = 4},
+  [sym_list] = {.index = 4, .length = 3},
+  [sym_list_item_content] = {.index = 7, .length = 3},
+  [sym_tag] = {.index = 10, .length = 4},
+};
+
+static const TSSymbol ts_supertype_map_entries[] = {
+  [0] =
+    sym_horizontal_line,
+    sym_list,
+    sym_paragraph,
+    sym_tag,
+  [4] =
+    sym_ordered_list,
+    sym_quote,
+    sym_unordered_list,
+  [7] =
+    sym_horizontal_line,
+    sym_paragraph,
+    sym_tag,
+  [10] =
+    sym_carryover_attributes,
+    sym_carryover_tag,
+    sym_infirm_tag,
+    sym_ranged_tag,
+};
+
 static const TSCharacterRange sym_word_character_set_1[] = {
   {'0', '9'}, {'A', 'Z'}, {'a', 'z'}, {0xaa, 0xaa}, {0xb2, 0xb3}, {0xb5, 0xb5}, {0xb9, 0xba}, {0xbc, 0xbe},
   {0xc0, 0xd6}, {0xd8, 0xf6}, {0xf8, 0x2c1}, {0x2c6, 0x2d1}, {0x2e0, 0x2e4}, {0x2ec, 0x2ec}, {0x2ee, 0x2ee}, {0x370, 0x374},
@@ -5306,7 +5341,7 @@ static bool ts_lex(TSLexer *lexer, TSStateId state) {
   }
 }
 
-static const TSLexMode ts_lex_modes[STATE_COUNT] = {
+static const TSLexerMode ts_lex_modes[STATE_COUNT] = {
   [0] = {.lex_state = 0, .external_lex_state = 1},
   [1] = {.lex_state = 29, .external_lex_state = 2},
   [2] = {.lex_state = 29, .external_lex_state = 3},
@@ -88729,6 +88764,7 @@ TS_PUBLIC const TSLanguage *tree_sitter_norg(void) {
     .state_count = STATE_COUNT,
     .large_state_count = LARGE_STATE_COUNT,
     .production_id_count = PRODUCTION_ID_COUNT,
+    .supertype_count = SUPERTYPE_COUNT,
     .field_count = FIELD_COUNT,
     .max_alias_sequence_length = MAX_ALIAS_SEQUENCE_LENGTH,
     .parse_table = &ts_parse_table[0][0],
@@ -88739,6 +88775,9 @@ TS_PUBLIC const TSLanguage *tree_sitter_norg(void) {
     .field_names = ts_field_names,
     .field_map_slices = ts_field_map_slices,
     .field_map_entries = ts_field_map_entries,
+    .supertype_map_slices = ts_supertype_map_slices,
+    .supertype_map_entries = ts_supertype_map_entries,
+    .supertype_symbols = ts_supertype_symbols,
     .symbol_metadata = ts_symbol_metadata,
     .public_symbol_map = ts_symbol_map,
     .alias_map = ts_non_terminal_alias_map,
@@ -88755,6 +88794,13 @@ TS_PUBLIC const TSLanguage *tree_sitter_norg(void) {
       tree_sitter_norg_external_scanner_deserialize,
     },
     .primary_state_ids = ts_primary_state_ids,
+    .name = "norg",
+    .max_reserved_word_set_size = 0,
+    .metadata = {
+      .major_version = 0,
+      .minor_version = 1,
+      .patch_version = 0,
+    },
   };
   return &language;
 }
