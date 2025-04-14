@@ -63,6 +63,21 @@ paragraph
       title: (paragraph
         (word)))))
 
+================================================================================
+heading-02: paragraph after heading (with trailing whitespace)
+================================================================================
+* heading    
+paragraph
+--------------------------------------------------------------------------------
+(document
+  (section
+    heading: (heading
+      (heading_prefix)
+      title: (paragraph
+        (word)))
+    (paragraph
+      (word))))
+
 ; TODO: add more tests
 
 ; vim:ts=2:sw=2:nf+=unsigned:

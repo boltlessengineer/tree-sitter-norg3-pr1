@@ -14,6 +14,8 @@ const punctuation = /[^\n\r\p{Z}\p{L}\p{N}]/u;
 // (excluding newline & word tokens)
 const escape_sequence = /\\[^\n\r\p{L}\p{N}]/u;
 
+const prec_newline = token(prec(2, seq(optional(whitespace), newline_or_eof)));
+
 const ATTACHED_MODIFIERS = [
     "bold",
     "italic",
@@ -187,7 +189,7 @@ module.exports = grammar({
                 whitespace,
             )),
             field("title", $.paragraph),
-            token(prec(1, newline_or_eof)),
+            prec_newline,
         ),
         ...[
             "unordered_list",
@@ -505,7 +507,7 @@ module.exports = grammar({
             $.infirm_tag_prefix,
             field("name", $.identifier),
             optional(seq(whitespace, optional(field("param", $.verbatim_line_param)))),
-            token(prec(1, newline_or_eof)),
+            prec_newline,
         ),
         carryover_tag: ($) => seq(
             $.carryover_tag_prefix,
