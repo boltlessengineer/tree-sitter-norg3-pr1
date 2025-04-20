@@ -80,6 +80,20 @@
     ]
   },
   {
+    "type": "target",
+    "named": true,
+    "subtypes": [
+      {
+        "type": "raw_target",
+        "named": true
+      },
+      {
+        "type": "scoped_target",
+        "named": true
+      }
+    ]
+  },
+  {
     "type": "anchor",
     "named": true,
     "fields": {
@@ -430,6 +444,22 @@
           "named": true
         }
       ]
+    }
+  },
+  {
+    "type": "heading_target",
+    "named": true,
+    "fields": {
+      "text": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "raw_target",
+            "named": true
+          }
+        ]
+      }
     }
   },
   {
@@ -1115,6 +1145,72 @@
     }
   },
   {
+    "type": "raw_target",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "escape_sequence",
+          "named": true
+        },
+        {
+          "type": "flag_not_close",
+          "named": true
+        },
+        {
+          "type": "hard_break",
+          "named": true
+        },
+        {
+          "type": "punctuation",
+          "named": true
+        },
+        {
+          "type": "soft_break",
+          "named": true
+        },
+        {
+          "type": "whitespace",
+          "named": true
+        },
+        {
+          "type": "word",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "scoped_target",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "heading_target",
+          "named": true
+        },
+        {
+          "type": "raw_target",
+          "named": true
+        },
+        {
+          "type": "scoped_target",
+          "named": true
+        },
+        {
+          "type": "wiki_target",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "section",
     "named": true,
     "fields": {
@@ -1246,45 +1342,6 @@
         },
         {
           "type": "verbatim",
-          "named": true
-        },
-        {
-          "type": "whitespace",
-          "named": true
-        },
-        {
-          "type": "word",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "target",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "escape_sequence",
-          "named": true
-        },
-        {
-          "type": "flag_not_close",
-          "named": true
-        },
-        {
-          "type": "hard_break",
-          "named": true
-        },
-        {
-          "type": "punctuation",
-          "named": true
-        },
-        {
-          "type": "soft_break",
           "named": true
         },
         {
@@ -2228,6 +2285,22 @@
     "type": "whitespace",
     "named": true,
     "fields": {}
+  },
+  {
+    "type": "wiki_target",
+    "named": true,
+    "fields": {
+      "text": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "raw_target",
+            "named": true
+          }
+        ]
+      }
+    }
   },
   {
     "type": "\u0000",

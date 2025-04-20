@@ -132,6 +132,7 @@ module.exports = grammar({
         $.list_item_content,
         $.tag,
         $.list,
+        $.target,
     ],
 
     rules: {
@@ -359,6 +360,45 @@ module.exports = grammar({
             $._verbatim_inline,
         ),
 
+        // TODO: implement prefix with external scanner
+        // - don't parse on error mode
+        // - check following whitespace but don't include it (to easily measure length)
+        heading_target: ($) => seq(
+            /\*+ +/,
+            field("text", $.raw_target)
+        ),
+        wiki_target: ($) => seq(
+            /\? +/,
+            field("text", $.raw_target)
+        ),
+        raw_target: ($) => $._verbatim_inline,
+        scoped_target: ($) => prec.right(seq(
+            token(prec(9, /: */)),
+            optional(choice(
+                // :* heading
+                $.heading_target,
+                // :? heading
+                $.wiki_target,
+                // :something
+                $.raw_target,
+            )),
+            optional($.scoped_target),
+        )),
+        target: ($) => choice(
+            // {:file
+            // {:* heading
+            // {:? heading
+            // {* heading <- not sure
+            // {? heading <- not sure
+            // {# <- might be confusing with {#id} which is URL. deprecate it.
+            // {1 <- deprecated
+            // {= <- deprecated
+            // {/ <- don't need it. use {./file.txt} or {file://./file.txt}
+            // {raw
+            $.scoped_target,
+            $.raw_target,
+        ),
+
         _field_markup: ($) => prec.right(seq(
             "[",
             optional(field("markup", alias($._closed_inline, $.markup))),
@@ -371,14 +411,14 @@ module.exports = grammar({
         _field_target: ($) => prec.right(seq(
             "{",
             optional(seq(
-                field("target", alias($._verbatim_inline, $.target)),
+                field("target", $.target),
                 optional($.flag_never_open),
             )),
             token(prec(9, "}")),
         )),
         _field_target_unclosed: ($) => prec.right(seq(
             "{",
-            optional(field("target", alias($._verbatim_inline, $.target))),
+            optional(field("target", $.target)),
         )),
 
         link: ($) => prec.right(seq(
