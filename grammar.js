@@ -384,7 +384,8 @@ module.exports = grammar({
             optional($._field_markup),
             optional(field("attributes", $.attributes)),
         )),
-        unclosed_link: ($) => choice(
+        unclosed_link: ($) => prec.right(choice(
+            "{",
             $._field_target_unclosed,
             seq(
                 $._field_target,
@@ -395,13 +396,14 @@ module.exports = grammar({
                 optional($._field_markup),
                 field("attributes", $.unclosed_attributes)
             ),
-        ),
+        )),
         anchor: ($) => prec.right(seq(
             $._field_markup,
             optional($._field_target),
             optional(field("attributes", $.attributes)),
         )),
-        unclosed_anchor: ($) => choice(
+        unclosed_anchor: ($) => prec.right(choice(
+            "[",
             $._field_markup_unclosed,
             seq(
                 $._field_markup,
@@ -412,7 +414,7 @@ module.exports = grammar({
                 optional($._field_target),
                 field("attributes", $.unclosed_attributes)
             ),
-        ),
+        )),
 
         attributes: ($) => seq(
             $._unclosed_attributes,

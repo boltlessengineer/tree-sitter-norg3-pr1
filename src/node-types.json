@@ -1314,7 +1314,7 @@
       },
       "markup": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "markup",
@@ -1659,7 +1659,7 @@
       },
       "target": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "target",
