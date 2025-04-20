@@ -361,22 +361,24 @@ module.exports = grammar({
 
         _field_markup: ($) => prec.right(seq(
             "[",
-            field("markup", alias($._closed_inline, $.markup)),
-            "]",
+            optional(field("markup", alias($._closed_inline, $.markup))),
+            token(prec(9, "]")),
         )),
         _field_markup_unclosed: ($) => prec.right(seq(
             "[",
-            field("markup", alias($._inline, $.markup)),
+            optional(field("markup", alias($._inline, $.markup))),
         )),
         _field_target: ($) => prec.right(seq(
             "{",
-            field("target", alias($._verbatim_inline, $.target)),
-            optional($.flag_never_open),
+            optional(seq(
+                field("target", alias($._verbatim_inline, $.target)),
+                optional($.flag_never_open),
+            )),
             token(prec(9, "}")),
         )),
         _field_target_unclosed: ($) => prec.right(seq(
             "{",
-            field("target", alias($._verbatim_inline, $.target)),
+            optional(field("target", alias($._verbatim_inline, $.target))),
         )),
 
         link: ($) => prec.right(seq(
@@ -385,7 +387,6 @@ module.exports = grammar({
             optional(field("attributes", $.attributes)),
         )),
         unclosed_link: ($) => prec.right(choice(
-            "{",
             $._field_target_unclosed,
             seq(
                 $._field_target,
@@ -403,7 +404,6 @@ module.exports = grammar({
             optional(field("attributes", $.attributes)),
         )),
         unclosed_anchor: ($) => prec.right(choice(
-            "[",
             $._field_markup_unclosed,
             seq(
                 $._field_markup,
