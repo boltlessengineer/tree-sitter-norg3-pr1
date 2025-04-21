@@ -1,0 +1,40 @@
+================================================================================
+link-00: Multiple link types
+================================================================================
+{:asdf}
+{:/asdf}
+{:$/asdf}
+{:$asdf/asdf}
+{asdf}
+--------------------------------------------------------------------------------
+(document
+  (paragraph
+    (link
+      target: (scoped_target
+        (raw_target
+          (word))))
+    (soft_break)
+    (link
+      target: (scoped_target
+        (raw_target
+          (punctuation)
+          (word))))
+    (soft_break)
+    (link
+      target: (scoped_target
+        (raw_target
+          (punctuation)
+          (punctuation)
+          (word))))
+    (soft_break)
+    (link
+      target: (scoped_target
+        (raw_target
+          (punctuation)
+          (word)
+          (punctuation)
+          (word))))
+    (soft_break)
+    (link
+      target: (raw_target
+        (word)))))

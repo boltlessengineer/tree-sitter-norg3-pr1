@@ -116,6 +116,7 @@ enum token_type {
     // MARKUP_CLOSE,
     // TARGET_OPEN,
     // TARGET_CLOSE,
+    SCOPE_DELIMITER,
 
     HEADING,
     TABLE,
@@ -460,6 +461,12 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
         TRY_SCAN(scan_prefix(self, valid_symbols, character));
     } else if (valid_symbols[FLAG_LIST_CONTENT]) {
         TRY_SCAN(scan_nonlist_prefix(self, valid_symbols, character, true));
+    }
+
+    if (valid_symbols[SCOPE_DELIMITER] && character == ':') {
+        lex_mark_end();
+        lex_set_result(SCOPE_DELIMITER);
+        return true;
     }
 
     // scan attached modifier

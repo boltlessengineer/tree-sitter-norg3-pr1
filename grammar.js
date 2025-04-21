@@ -93,6 +93,7 @@ module.exports = grammar({
         // $.markup_close,
         // $.target_open,
         // $.target_close,
+        $.scope_delimiter,
 
         $.heading_prefix,
         $.table_prefix,
@@ -373,7 +374,8 @@ module.exports = grammar({
         ),
         raw_target: ($) => $._verbatim_inline,
         scoped_target: ($) => prec.right(seq(
-            token(prec(9, /: */)),
+            alias($.scope_delimiter, ":"),
+            optional(token(prec(1, whitespace))),
             optional(choice(
                 // :* heading
                 $.heading_target,
@@ -384,7 +386,7 @@ module.exports = grammar({
             )),
             optional($.scoped_target),
         )),
-        target: ($) => choice(
+        target: ($) => seq(choice(
             // {:file
             // {:* heading
             // {:? heading
@@ -397,6 +399,7 @@ module.exports = grammar({
             // {raw
             $.scoped_target,
             $.raw_target,
+        ),
         ),
 
         _field_markup: ($) => prec.right(seq(

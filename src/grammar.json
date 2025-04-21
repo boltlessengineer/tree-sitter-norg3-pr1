@@ -2006,15 +2006,33 @@
         "type": "SEQ",
         "members": [
           {
-            "type": "TOKEN",
+            "type": "ALIAS",
             "content": {
-              "type": "PREC",
-              "value": 9,
-              "content": {
-                "type": "PATTERN",
-                "value": ": *"
+              "type": "SYMBOL",
+              "name": "scope_delimiter"
+            },
+            "named": false,
+            "value": ":"
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "TOKEN",
+                "content": {
+                  "type": "PREC",
+                  "value": 1,
+                  "content": {
+                    "type": "PATTERN",
+                    "value": "\\p{Zs}+",
+                    "flags": "u"
+                  }
+                }
+              },
+              {
+                "type": "BLANK"
               }
-            }
+            ]
           },
           {
             "type": "CHOICE",
@@ -2057,15 +2075,20 @@
       }
     },
     "target": {
-      "type": "CHOICE",
+      "type": "SEQ",
       "members": [
         {
-          "type": "SYMBOL",
-          "name": "scoped_target"
-        },
-        {
-          "type": "SYMBOL",
-          "name": "raw_target"
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "scoped_target"
+            },
+            {
+              "type": "SYMBOL",
+              "name": "raw_target"
+            }
+          ]
         }
       ]
     },
@@ -3390,6 +3413,10 @@
     {
       "type": "SYMBOL",
       "name": "verbatim_close"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "scope_delimiter"
     },
     {
       "type": "SYMBOL",
