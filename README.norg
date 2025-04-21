@@ -21,8 +21,8 @@
    > Expect plugins like [headlines.nvim], [nvim-treesitter-context] breaks
      when using this parser. It's not compatible with v1 parser's queries.
 
-===
-|hide
+*
+@hide
 [headlines.nvim]{https://github.com/lukas-reineke/headlines.nvim}
 [nvim-treesitter-context]{https://github.com/nvim-treesitter/nvim-treesitter-context}
-|end
+@end
