@@ -423,7 +423,7 @@ static bool scan(Scanner *self, const bool *valid_symbols) {
     const int32_t character = lex_next;
     // mark end here for zero-width tokens
     lex_mark_end();
-    if (iswspace(lex_next)) lex_skip();
+    if (is_whitespace(lex_next)) lex_skip();
     else lex_advance();
 
     if (start_column == 0 && is_newline(character)) {
