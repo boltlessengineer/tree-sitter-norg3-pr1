@@ -6,6 +6,7 @@ link-00: Multiple link types
 {:$/asdf}
 {:$asdf/asdf}
 {asdf}
+{/asdf}
 --------------------------------------------------------------------------------
 (document
   (paragraph
@@ -37,4 +38,9 @@ link-00: Multiple link types
     (soft_break)
     (link
       target: (raw_target
+        (word)))
+    (soft_break)
+    (link
+      target: (raw_target
+        (punctuation)
         (word)))))

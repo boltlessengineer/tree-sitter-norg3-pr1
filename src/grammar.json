@@ -2194,20 +2194,20 @@
                       "type": "SYMBOL",
                       "name": "target"
                     }
-                  },
-                  {
-                    "type": "CHOICE",
-                    "members": [
-                      {
-                        "type": "SYMBOL",
-                        "name": "flag_never_open"
-                      },
-                      {
-                        "type": "BLANK"
-                      }
-                    ]
                   }
                 ]
+              },
+              {
+                "type": "BLANK"
+              }
+            ]
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "flag_never_open"
               },
               {
                 "type": "BLANK"

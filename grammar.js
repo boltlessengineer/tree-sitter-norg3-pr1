@@ -413,10 +413,8 @@ module.exports = grammar({
         )),
         _field_target: ($) => prec.right(seq(
             "{",
-            optional(seq(
-                field("target", $.target),
-                optional($.flag_never_open),
-            )),
+            optional(field("target", $.target)),
+            optional($.flag_never_open),
             token(prec(9, "}")),
         )),
         _field_target_unclosed: ($) => prec.right(seq(
