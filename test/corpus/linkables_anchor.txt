@@ -78,7 +78,7 @@ anchor-04: reset attached modifier after destination
 (document
   (paragraph
     (unclosed_anchor
-      markup: (markup
+      markup: (markup_unclosed
         (bold
           (bold_open)
           (word)
@@ -208,7 +208,8 @@ anchor-10: unclosed anchor without markup
 --------------------------------------------------------------------------------
 (document
   (paragraph
-    (unclosed_anchor)))
+    (unclosed_anchor
+      markup: (markup_unclosed))))
 
 ================================================================================
 anchor-10.1: unclosed anchor without markup
@@ -220,7 +221,8 @@ anchor-10.1: unclosed anchor without markup
     (unordered_list_item
       (unordered_list_prefix)
       (paragraph
-        (unclosed_anchor)))))
+        (unclosed_anchor
+          markup: (markup_unclosed))))))
 
 ================================================================================
 anchor-10.2: unclosed anchor without markup
@@ -232,7 +234,8 @@ anchor-10.2: unclosed anchor without markup
     heading: (heading
       (heading_prefix)
       title: (paragraph
-        (unclosed_anchor)))))
+        (unclosed_anchor
+          markup: (markup_unclosed))))))
 
 ================================================================================
 anchor-11: unclosed anchor with complete markup
@@ -243,7 +246,8 @@ anchor-11: unclosed anchor with complete markup
   (paragraph
     (unclosed_anchor
       markup: (markup
-        (word)))))
+        (word))
+      target: (target_unclosed))))
 
 ================================================================================
 anchor-12: anchor without markup
@@ -252,6 +256,7 @@ anchor-12: anchor without markup
 --------------------------------------------------------------------------------
 (document
   (paragraph
-    (anchor)))
+    (anchor
+      (markup))))
 
 ; vim:ts=2:sw=2:nf+=unsigned:

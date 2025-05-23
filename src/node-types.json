@@ -80,20 +80,6 @@
     ]
   },
   {
-    "type": "target",
-    "named": true,
-    "subtypes": [
-      {
-        "type": "raw_target",
-        "named": true
-      },
-      {
-        "type": "scoped_target",
-        "named": true
-      }
-    ]
-  },
-  {
     "type": "anchor",
     "named": true,
     "fields": {
@@ -109,7 +95,7 @@
       },
       "markup": {
         "multiple": false,
-        "required": false,
+        "required": true,
         "types": [
           {
             "type": "markup",
@@ -127,16 +113,6 @@
           }
         ]
       }
-    },
-    "children": {
-      "multiple": false,
-      "required": false,
-      "types": [
-        {
-          "type": "flag_never_open",
-          "named": true
-        }
-      ]
     }
   },
   {
@@ -447,22 +423,6 @@
     }
   },
   {
-    "type": "heading_target",
-    "named": true,
-    "fields": {
-      "text": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "raw_target",
-            "named": true
-          }
-        ]
-      }
-    }
-  },
-  {
     "type": "infirm_tag",
     "named": true,
     "fields": {
@@ -654,7 +614,7 @@
       },
       "target": {
         "multiple": false,
-        "required": false,
+        "required": true,
         "types": [
           {
             "type": "target",
@@ -662,16 +622,6 @@
           }
         ]
       }
-    },
-    "children": {
-      "multiple": false,
-      "required": false,
-      "types": [
-        {
-          "type": "flag_never_open",
-          "named": true
-        }
-      ]
     }
   },
   {
@@ -680,7 +630,82 @@
     "fields": {},
     "children": {
       "multiple": true,
-      "required": true,
+      "required": false,
+      "types": [
+        {
+          "type": "anchor",
+          "named": true
+        },
+        {
+          "type": "bold",
+          "named": true
+        },
+        {
+          "type": "escape_sequence",
+          "named": true
+        },
+        {
+          "type": "flag_not_close",
+          "named": true
+        },
+        {
+          "type": "flag_not_open",
+          "named": true
+        },
+        {
+          "type": "hard_break",
+          "named": true
+        },
+        {
+          "type": "inline_macro",
+          "named": true
+        },
+        {
+          "type": "italic",
+          "named": true
+        },
+        {
+          "type": "link",
+          "named": true
+        },
+        {
+          "type": "punctuation",
+          "named": true
+        },
+        {
+          "type": "soft_break",
+          "named": true
+        },
+        {
+          "type": "strikethrough",
+          "named": true
+        },
+        {
+          "type": "underline",
+          "named": true
+        },
+        {
+          "type": "verbatim",
+          "named": true
+        },
+        {
+          "type": "whitespace",
+          "named": true
+        },
+        {
+          "type": "word",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "markup_unclosed",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
       "types": [
         {
           "type": "anchor",
@@ -1145,72 +1170,6 @@
     }
   },
   {
-    "type": "raw_target",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "escape_sequence",
-          "named": true
-        },
-        {
-          "type": "flag_not_close",
-          "named": true
-        },
-        {
-          "type": "hard_break",
-          "named": true
-        },
-        {
-          "type": "punctuation",
-          "named": true
-        },
-        {
-          "type": "soft_break",
-          "named": true
-        },
-        {
-          "type": "whitespace",
-          "named": true
-        },
-        {
-          "type": "word",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "scoped_target",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": false,
-      "types": [
-        {
-          "type": "heading_target",
-          "named": true
-        },
-        {
-          "type": "raw_target",
-          "named": true
-        },
-        {
-          "type": "scoped_target",
-          "named": true
-        },
-        {
-          "type": "wiki_target",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
     "type": "section",
     "named": true,
     "fields": {
@@ -1356,6 +1315,79 @@
     }
   },
   {
+    "type": "target",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "flag_never_open",
+          "named": true
+        },
+        {
+          "type": "target_query",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "target_query",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "escape_sequence",
+          "named": true
+        },
+        {
+          "type": "flag_not_close",
+          "named": true
+        },
+        {
+          "type": "hard_break",
+          "named": true
+        },
+        {
+          "type": "punctuation",
+          "named": true
+        },
+        {
+          "type": "soft_break",
+          "named": true
+        },
+        {
+          "type": "whitespace",
+          "named": true
+        },
+        {
+          "type": "word",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "target_unclosed",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "target_query",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "unclosed_anchor",
     "named": true,
     "fields": {
@@ -1371,10 +1403,14 @@
       },
       "markup": {
         "multiple": false,
-        "required": false,
+        "required": true,
         "types": [
           {
             "type": "markup",
+            "named": true
+          },
+          {
+            "type": "markup_unclosed",
             "named": true
           }
         ]
@@ -1386,19 +1422,13 @@
           {
             "type": "target",
             "named": true
+          },
+          {
+            "type": "target_unclosed",
+            "named": true
           }
         ]
       }
-    },
-    "children": {
-      "multiple": false,
-      "required": false,
-      "types": [
-        {
-          "type": "flag_never_open",
-          "named": true
-        }
-      ]
     }
   },
   {
@@ -1541,10 +1571,14 @@
     "fields": {
       "markup": {
         "multiple": false,
-        "required": false,
+        "required": true,
         "types": [
           {
             "type": "markup",
+            "named": true
+          },
+          {
+            "type": "markup_unclosed",
             "named": true
           }
         ]
@@ -1711,29 +1745,27 @@
           {
             "type": "markup",
             "named": true
+          },
+          {
+            "type": "markup_unclosed",
+            "named": true
           }
         ]
       },
       "target": {
         "multiple": false,
-        "required": false,
+        "required": true,
         "types": [
           {
             "type": "target",
             "named": true
+          },
+          {
+            "type": "target_unclosed",
+            "named": true
           }
         ]
       }
-    },
-    "children": {
-      "multiple": false,
-      "required": false,
-      "types": [
-        {
-          "type": "flag_never_open",
-          "named": true
-        }
-      ]
     }
   },
   {
@@ -2287,22 +2319,6 @@
     "fields": {}
   },
   {
-    "type": "wiki_target",
-    "named": true,
-    "fields": {
-      "text": {
-        "multiple": false,
-        "required": true,
-        "types": [
-          {
-            "type": "raw_target",
-            "named": true
-          }
-        ]
-      }
-    }
-  },
-  {
     "type": "\u0000",
     "named": false
   },
@@ -2324,10 +2340,6 @@
   },
   {
     "type": ")",
-    "named": false
-  },
-  {
-    "type": ":",
     "named": false
   },
   {

@@ -133,7 +133,7 @@ module.exports = grammar({
         $.list_item_content,
         $.tag,
         $.list,
-        $.target,
+        // $.target,
     ],
 
     rules: {
@@ -386,41 +386,46 @@ module.exports = grammar({
             )),
             optional($.scoped_target),
         )),
-        target: ($) => seq(choice(
-            // {:file
-            // {:* heading
-            // {:? heading
-            // {* heading <- not sure
-            // {? heading <- not sure
-            // {# <- might be confusing with {#id} which is URL. deprecate it.
-            // {1 <- deprecated
-            // {= <- deprecated
-            // {/ <- don't need it. use {./file.txt} or {file://./file.txt}
-            // {raw
-            $.scoped_target,
-            $.raw_target,
-        ),
-        ),
+        // target: ($) => seq(choice(
+        //     // {:file
+        //     // {:* heading
+        //     // {:? heading
+        //     // {* heading <- not sure
+        //     // {? heading <- not sure
+        //     // {# <- might be confusing with {#id} which is URL. deprecate it.
+        //     // {1 <- deprecated
+        //     // {= <- deprecated
+        //     // {/ <- don't need it. use {./file.txt} or {file://./file.txt}
+        //     // {raw
+        //     $.scoped_target,
+        //     $.raw_target,
+        // ),
+        // ),
 
-        _field_markup: ($) => prec.right(seq(
+        markup: ($) => prec.right(seq(
             "[",
-            optional(field("markup", alias($._closed_inline, $.markup))),
+            optional($._closed_inline),
             token(prec(9, "]")),
         )),
-        _field_markup_unclosed: ($) => prec.right(seq(
+        markup_unclosed: ($) => prec.right(seq(
             "[",
-            optional(field("markup", alias($._inline, $.markup))),
+            optional($._inline),
         )),
-        _field_target: ($) => prec.right(seq(
+        target: ($) => prec.right(seq(
             "{",
-            optional(field("target", $.target)),
+            optional($.target_query),
             optional($.flag_never_open),
             token(prec(9, "}")),
         )),
-        _field_target_unclosed: ($) => prec.right(seq(
+        target_unclosed: ($) => prec.right(seq(
             "{",
-            optional(field("target", $.target)),
+            optional($.target_query),
         )),
+        target_query: ($) => $._verbatim_inline,
+        _field_target: ($) => field("target", $.target),
+        _field_target_unclosed: ($) => field("target", $.target_unclosed),
+        _field_markup: ($) => field("markup", $.markup),
+        _field_markup_unclosed: ($) => field("markup", $.markup_unclosed),
 
         link: ($) => prec.right(seq(
             $._field_target,

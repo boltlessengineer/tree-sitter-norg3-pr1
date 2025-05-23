@@ -2074,25 +2074,7 @@
         ]
       }
     },
-    "target": {
-      "type": "SEQ",
-      "members": [
-        {
-          "type": "CHOICE",
-          "members": [
-            {
-              "type": "SYMBOL",
-              "name": "scoped_target"
-            },
-            {
-              "type": "SYMBOL",
-              "name": "raw_target"
-            }
-          ]
-        }
-      ]
-    },
-    "_field_markup": {
+    "markup": {
       "type": "PREC_RIGHT",
       "value": 0,
       "content": {
@@ -2106,17 +2088,8 @@
             "type": "CHOICE",
             "members": [
               {
-                "type": "FIELD",
-                "name": "markup",
-                "content": {
-                  "type": "ALIAS",
-                  "content": {
-                    "type": "SYMBOL",
-                    "name": "_closed_inline"
-                  },
-                  "named": true,
-                  "value": "markup"
-                }
+                "type": "SYMBOL",
+                "name": "_closed_inline"
               },
               {
                 "type": "BLANK"
@@ -2137,7 +2110,7 @@
         ]
       }
     },
-    "_field_markup_unclosed": {
+    "markup_unclosed": {
       "type": "PREC_RIGHT",
       "value": 0,
       "content": {
@@ -2151,17 +2124,8 @@
             "type": "CHOICE",
             "members": [
               {
-                "type": "FIELD",
-                "name": "markup",
-                "content": {
-                  "type": "ALIAS",
-                  "content": {
-                    "type": "SYMBOL",
-                    "name": "_inline"
-                  },
-                  "named": true,
-                  "value": "markup"
-                }
+                "type": "SYMBOL",
+                "name": "_inline"
               },
               {
                 "type": "BLANK"
@@ -2171,7 +2135,7 @@
         ]
       }
     },
-    "_field_target": {
+    "target": {
       "type": "PREC_RIGHT",
       "value": 0,
       "content": {
@@ -2185,17 +2149,8 @@
             "type": "CHOICE",
             "members": [
               {
-                "type": "SEQ",
-                "members": [
-                  {
-                    "type": "FIELD",
-                    "name": "target",
-                    "content": {
-                      "type": "SYMBOL",
-                      "name": "target"
-                    }
-                  }
-                ]
+                "type": "SYMBOL",
+                "name": "target_query"
               },
               {
                 "type": "BLANK"
@@ -2228,7 +2183,7 @@
         ]
       }
     },
-    "_field_target_unclosed": {
+    "target_unclosed": {
       "type": "PREC_RIGHT",
       "value": 0,
       "content": {
@@ -2242,12 +2197,8 @@
             "type": "CHOICE",
             "members": [
               {
-                "type": "FIELD",
-                "name": "target",
-                "content": {
-                  "type": "SYMBOL",
-                  "name": "target"
-                }
+                "type": "SYMBOL",
+                "name": "target_query"
               },
               {
                 "type": "BLANK"
@@ -2255,6 +2206,42 @@
             ]
           }
         ]
+      }
+    },
+    "target_query": {
+      "type": "SYMBOL",
+      "name": "_verbatim_inline"
+    },
+    "_field_target": {
+      "type": "FIELD",
+      "name": "target",
+      "content": {
+        "type": "SYMBOL",
+        "name": "target"
+      }
+    },
+    "_field_target_unclosed": {
+      "type": "FIELD",
+      "name": "target",
+      "content": {
+        "type": "SYMBOL",
+        "name": "target_unclosed"
+      }
+    },
+    "_field_markup": {
+      "type": "FIELD",
+      "name": "markup",
+      "content": {
+        "type": "SYMBOL",
+        "name": "markup"
+      }
+    },
+    "_field_markup_unclosed": {
+      "type": "FIELD",
+      "name": "markup",
+      "content": {
+        "type": "SYMBOL",
+        "name": "markup_unclosed"
       }
     },
     "link": {
@@ -3489,8 +3476,7 @@
     "block",
     "list_item_content",
     "tag",
-    "list",
-    "target"
+    "list"
   ],
   "reserved": {}
 }

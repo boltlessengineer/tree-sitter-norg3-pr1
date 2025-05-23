@@ -8,6 +8,7 @@ link-00: Multiple link types
 {asdf}
 {/asdf}
 --------------------------------------------------------------------------------
+; TODO: update this test case
 (document
   (paragraph
     (link
